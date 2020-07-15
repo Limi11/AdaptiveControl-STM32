@@ -5,8 +5,8 @@
  *      Author: User
  */
 
-#ifndef INC_VERIFIKATION_HPP_
-#define INC_VERIFIKATION_HPP_
+#ifndef INC_VERIFICATION_HPP_
+#define INC_VERIFICATION_HPP_
 
 class verification
 {
@@ -82,4 +82,4 @@ public:
 };
 
 
-#endif /* INC_VERIFIKATION_HPP_ */
+#endif /* INC_VERIFICATION_HPP_ */

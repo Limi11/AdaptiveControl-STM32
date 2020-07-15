@@ -29,7 +29,6 @@
 #include "retarget.h"
 #include "systemidentification.hpp"
 #include "testsystem.hpp"
-#include "verifikation.hpp"
 #include "debug.h"
 
 /* USER CODE END Includes */
@@ -71,9 +70,8 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2);
+systemidentification *PT2 = new systemidentification(2, 0.95);
 testsystem *PT1 = new testsystem();
-verification *Verifikation = new verification(2);
 
 /* USER CODE END PV */
 
@@ -297,10 +295,7 @@ void StartDefaultTask(void *argument)
 		float u = 1.0;
 		float *testdata = PT1->testsystem_output(u,2000.0);
 	 	float *result = PT2->calculateSystem(testdata[0],testdata[1]);
-	 	float yverif = Verifikation->verification_output(testdata[1],result);
-	 	float diff = testdata[0]-yverif;
-	 	printf("diff: %.2f  \r\n\r\n", diff);
-// .	 	printf("diff: %d  \r\n\r\n", i);
+// .	printf("diff: %d  \r\n\r\n", i);
   }
   /* USER CODE END 5 */ 
 }

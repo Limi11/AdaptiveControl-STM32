@@ -13,7 +13,7 @@
 
 
 systemidentification::systemidentification(int order, float expoForget)
-:timeFactor(10000),order(order),m(2*order),flag(0),expoForget(expoForget),
+:timeFactor(10000),order(order),m(2*order),flag(0),expoForget(expoForget),error(0.0),
  measuredOutputNew(0.0), measuredOutputOld(0.0),
  signalInput(new float[order]), signalOutput(new float[order]),
  estimatedValue(0.0),resultArray(new float[m]),
@@ -25,7 +25,8 @@ systemidentification::systemidentification(int order, float expoForget)
  helpVector(new vector<float>(order,0.0)),
  covarianceMatrix(new matrix<float>(order,0.0)),
  unitMatrix(new matrix<float>(order,0.0)),
- helpMatrix(new matrix<float>(order,0.0))
+ helpMatrix(new matrix<float>(order,0.0)),
+ sysVerification(new verification(order))
 {
 	// add some special values to covariance- and unit- matrix
 	//covarianceMatrix({1000.0,0.0,0.0,0.0},{0.0,1000.0,0.0,0.0},{0.0,0.0,1000.0,0.0},{0.0,0.0,0.0,1000.0})
@@ -104,7 +105,16 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 		flag = 3;
 	}
 
+	error = getError();
+
 	return newParametersVector(OutputNew);
+}
+
+float systemidentification::getError()
+{
+	float yverif = sysVerification->verification_output(-signalVectornew->getElement(order),resultArray);
+	float diff = -signalVectornew->getElement(0)-yverif;
+ 	printf("diff: %.2f  \r\n\r\n", diff);
 }
 
 void systemidentification::newSignalVector(float OutputNew,float InputNew)
@@ -151,7 +161,7 @@ void systemidentification::newCovarianceMatrix()
 
 #ifdef _DEBUG
 	printf("\r\n\r\n\r\n");
-	printf("\r\n********* Calculate Covarince Matrix: P(k+1) = [I-(K(k)*Y'(k))]*P(k) ********* \r\n\r\n");
+	printf("\r\n********* Calculate Covarince Matrix: P(k+1) = (1/expoForget)*([I-(K(k)*Y'(k))]*P(k)) ********* \r\n\r\n");
 	printf("Firstly calculate Help Matrix: K(k)*Y'(k) \r\n");
 	printf("Calculation Input: \r\n");
 	signalVector->printVector("Signal Vector");
@@ -172,13 +182,14 @@ void systemidentification::newCovarianceMatrix()
 
 #ifdef _DEBUG
 	helpMatrix->printMatrix("Result Help Matrix:");
-	printf("Thirdly calculate covarianceMatrix: P(k+1) = [helpMatrix]*P(k) \r\n");
+	printf("Thirdly calculate covarianceMatrix: P(k+1) = (1/expoForget)*([helpMatrix]*P(k)) \r\n");
 	printf("Calculation Input: \r\n");
 	helpMatrix->printMatrix("Help Matrix:");
 	covarianceMatrix->printMatrix("Covariance Matrix:");
 #endif
 
 	*covarianceMatrix = (*helpMatrix) * (*covarianceMatrix);
+	*covarianceMatrix = *covarianceMatrix * (1/expoForget);
 
 #ifdef _DEBUG
 	covarianceMatrix->printMatrix("Result covarianceMatrix:");
@@ -191,7 +202,7 @@ void systemidentification::newCorrectionVector(float OutputNew)
 
 #ifdef _DEBUG
 	printf("\r\n\r\n");
-	printf("\r\n********* Calculate Correction Vector: K = P(k)*Y(k)/(Y'(k)*P(k)*Y(k)+1) ********* \r\n\r\n");
+	printf("\r\n********* Calculate Correction Vector: K = P(k)*Y(k)/(Y'(k)*P(k)*Y(k)+expoForget) ********* \r\n\r\n");
 	printf("Firstly calculate help vector: Y'(k)*P(k) \r\n");
 	printf("Calculation Input: \r\n");
 	signalVector->printVector("Signal Vector");
@@ -242,7 +253,7 @@ void systemidentification::newCorrectionVector(float OutputNew)
 
 	for(int i=0; i<m; i++)
 	{
-		float x = helpVector->getElement(i)/(helpScalar+1);
+		float x = helpVector->getElement(i)/(helpScalar+expoForget);
 		correctionVector->setElement(i, x);
 	}
 

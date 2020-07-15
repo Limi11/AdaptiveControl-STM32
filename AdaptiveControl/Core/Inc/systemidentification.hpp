@@ -10,6 +10,7 @@
 
 
 #include <main.hpp>
+#include <verification.hpp>
 #include "vector.hpp"
 #include "matrix.hpp"
 
@@ -23,6 +24,7 @@ private:
 	int m;
 	int flag;
 	float expoForget;
+	float error;
 	float measuredOutputNew;
 	float measuredOutputOld;
 	float* signalInput;
@@ -38,16 +40,18 @@ private:
 	matrix<float>* covarianceMatrix;
 	matrix<float>* unitMatrix;
 	matrix<float>* helpMatrix;
+	verification* sysVerification;
 
 
 
 public:
 
-	systemidentification(int);
+	systemidentification(int, float);
 
 	~systemidentification();
 
 	float* calculateSystem(float OutputNew,float InputNew);
+	float getError();
 	void newSignalVector(float OutputNew,float InputNew);
 	void newCovarianceMatrix();
 	void newCorrectionVector(float OutputNew);
