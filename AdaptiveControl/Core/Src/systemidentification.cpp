@@ -12,8 +12,8 @@
 
 
 
-systemidentification::systemidentification(int order, float expoForget)
-:timeFactor(10000),order(order),m(2*order),flag(0),expoForget(expoForget),error(0.0),
+systemidentification::systemidentification(int order, float expoForget, float tolerance)
+:timeFactor(10000),order(order),m(2*order),flag(0),expoForget(expoForget),error(0.0),tolerance(tolerance),
  measuredOutputNew(0.0), measuredOutputOld(0.0),
  signalInput(new float[order]), signalOutput(new float[order]),
  estimatedValue(0.0),resultArray(new float[m]),
@@ -92,7 +92,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 		flag++;
 	}
 
-	if(flag == 3)
+	if(flag == 3 && error>1)
 	{
 		newCovarianceMatrix();
 		*signalVector = *signalVectornew;
@@ -105,16 +105,16 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 		flag = 3;
 	}
 
-	error = getError();
+	getError();
 
 	return newParametersVector(OutputNew);
 }
 
-float systemidentification::getError()
+void systemidentification::getError()
 {
 	float yverif = sysVerification->verification_output(-signalVectornew->getElement(order),resultArray);
-	float diff = -signalVectornew->getElement(0)-yverif;
- 	printf("diff: %.2f  \r\n\r\n", diff);
+	error = -(signalVectornew->getElement(0)-yverif);
+ 	printf("diff: %.2f  \r\n\r\n", error);
 }
 
 void systemidentification::newSignalVector(float OutputNew,float InputNew)

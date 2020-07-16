@@ -70,7 +70,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2, 0.95);
+systemidentification *PT2 = new systemidentification(2, 0.95, 1);
 testsystem *PT1 = new testsystem();
 
 /* USER CODE END PV */

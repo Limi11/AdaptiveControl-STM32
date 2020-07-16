@@ -24,6 +24,7 @@ private:
 	int m;
 	int flag;
 	float expoForget;
+	float tolerance;
 	float error;
 	float measuredOutputNew;
 	float measuredOutputOld;
@@ -46,12 +47,12 @@ private:
 
 public:
 
-	systemidentification(int, float);
+	systemidentification(int, float, float);
 
 	~systemidentification();
 
 	float* calculateSystem(float OutputNew,float InputNew);
-	float getError();
+	void getError();
 	void newSignalVector(float OutputNew,float InputNew);
 	void newCovarianceMatrix();
 	void newCorrectionVector(float OutputNew);
