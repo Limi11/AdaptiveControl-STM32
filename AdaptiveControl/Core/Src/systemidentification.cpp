@@ -92,7 +92,8 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 		flag++;
 	}
 
-	if(flag == 3 && error>1)
+	// if we have a model with an error smaller then the tolerance we stop identification
+	if(flag == 3 && error>tolerance)
 	{
 		newCovarianceMatrix();
 		*signalVector = *signalVectornew;
