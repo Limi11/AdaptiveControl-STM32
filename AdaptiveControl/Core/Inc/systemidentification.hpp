@@ -23,6 +23,11 @@ private:
 	int order;
 	int m;
 	int flag;
+	int DeadTime;
+	int oldDeadTime;
+	bool deadTimeFlag;
+	float deadTimeBorderHigh;
+	float deadTimeBorderLow;
 	float expoForget;
 	float tolerance;
 	float error;
@@ -47,15 +52,16 @@ private:
 
 public:
 
-	systemidentification(int, float, float);
-
+	systemidentification(int order, float expoForget, float tolerance, bool deadtime, float BorderHigh, float BorderLow);
 	~systemidentification();
 
-	float* calculateSystem(float OutputNew,float InputNew);
-	void getError();
+
+	void getError(float OutputNew);
 	void newSignalVector(float OutputNew,float InputNew);
 	void newCovarianceMatrix();
 	void newCorrectionVector(float OutputNew);
+	int newDeadTime();
+	float* calculateSystem(float OutputNew,float InputNew);
 	float* newParametersVector(float OutputNew);
 
 };

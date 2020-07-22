@@ -26,6 +26,10 @@ private:
 	float Kpt1;
 	// flag
 	int flag;
+	// deadtime
+	int deadTime;
+	// timer for deadtime
+	int deadTimeTimer;
 	// return array
 	float *output;
 
@@ -33,7 +37,7 @@ private:
 
 public:
 
-	testsystem();
+	testsystem(int deadtime);
 
 	// test with digital pt1
 	// y(k) = y(k-1) + [Kpt1 * u(k) - y(k-1)] * (deltaT/(T+deltaT))

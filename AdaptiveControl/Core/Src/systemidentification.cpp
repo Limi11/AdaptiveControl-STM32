@@ -12,9 +12,9 @@
 
 
 
-systemidentification::systemidentification(int order, float expoForget, float tolerance)
+systemidentification::systemidentification(int order, float expoForget, float tolerance, bool deadtime, float BorderHigh, float BorderLow)
 :timeFactor(10000),order(order),m(2*order),flag(0),expoForget(expoForget),error(0.0),tolerance(tolerance),
- measuredOutputNew(0.0), measuredOutputOld(0.0),
+ measuredOutputNew(0.0), measuredOutputOld(0.0),deadTimeFlag(deadtime), deadTimeBorderHigh(BorderHigh), deadTimeBorderLow(BorderLow), oldDeadTime(0), DeadTime(0),
  signalInput(new float[order]), signalOutput(new float[order]),
  estimatedValue(0.0),resultArray(new float[m]),
  parametersVector(new vector<float>(order,0.0)),
@@ -40,7 +40,6 @@ systemidentification::systemidentification(int order, float expoForget, float to
 		}
 }
 
-
 systemidentification::~systemidentification()
 {
 	delete signalInput;
@@ -57,9 +56,43 @@ systemidentification::~systemidentification()
 	delete helpMatrix;
 }
 
-
 float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 {
+
+#ifdef _DEBUG
+	printf("\r\n\r\n\r\n\r\n\r\n********************** Start deadtime Identification **********************\n\r");
+	printf("*************************************************************************\n\r\n");
+#endif
+
+	if(deadTimeFlag == true)
+	{
+	// deadtime is only calculated on a new system jump from zero
+		if(OutputNew < deadTimeBorderHigh && OutputNew > deadTimeBorderLow)
+		{
+			// reset on new deadtime calculation
+			if(flag != -1)
+			{
+				DeadTime = 0;
+			}
+			// if there is a input we count the time steps until the system reacts
+			if(InputNew != 0)
+			{
+			DeadTime++;
+			}
+			flag = -1;
+		}
+		else
+		{
+		 oldDeadTime = DeadTime;
+		 if(flag == -1)
+		 	 {
+			 	 flag = 0;
+		 	 }
+		}
+
+		printf("DeadTime: %d  \r\n\r\n", oldDeadTime);
+	}
+
 	// Source: "Identifikation Dynamischer Systeme v. Klaus Schwebel"
 
 	// definition of variables
@@ -77,8 +110,9 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 #endif
 
 	// first round when flag = 0
+	// if flag is -1 we are in deadtime detection
 	// the first two rounds without newCovarianceMatrix
-	if(flag < 3)
+	if(flag < 3 && flag != -1)
 	{
 		// set old signalVector k+1 to new signalVector k
 #ifdef _DEBUG
@@ -106,15 +140,16 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 		flag = 3;
 	}
 
-	getError();
+	getError(OutputNew);
+
 
 	return newParametersVector(OutputNew);
 }
 
-void systemidentification::getError()
+void systemidentification::getError(float OutputNew)
 {
 	float yverif = sysVerification->verification_output(-signalVectornew->getElement(order),resultArray);
-	error = -(signalVectornew->getElement(0)-yverif);
+	error = OutputNew+yverif;
  	printf("diff: %.2f  \r\n\r\n", error);
 }
 
@@ -308,6 +343,11 @@ float* systemidentification::newParametersVector(float OutputNew)
 			resultArray[i] = parametersVector->getElement(i);
 		}
 
-
+		parametersVector->printVector("Result Parameters Vector:");
 		return resultArray;
+}
+
+int systemidentification::newDeadTime()
+{
+	return DeadTime;
 }
