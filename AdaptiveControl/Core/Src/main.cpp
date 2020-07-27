@@ -70,7 +70,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2,0.95,1,true,1.0,-1.0);
+systemidentification *PT2 = new systemidentification(2,1,1,true,1.0,-1.0);
 testsystem *PT1 = new testsystem(5);
 
 /* USER CODE END PV */
@@ -291,7 +291,7 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
 	  	i++;
-	  	osDelay(200);
+	  	osDelay(500);
 		float u = 1.0;
 		float *testdata = PT1->testsystem_output(u,2000.0);
 	 	float *result = PT2->calculateSystem(testdata[0],testdata[1]);

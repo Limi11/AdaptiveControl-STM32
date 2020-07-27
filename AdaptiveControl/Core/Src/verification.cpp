@@ -53,5 +53,5 @@ float verification::verification_output(float x,const float* ab)
 	yVec[0] = y;
 	uVec[0] = u;
 
-	return y;
+	return -y;
 };

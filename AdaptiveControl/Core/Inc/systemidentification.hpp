@@ -22,7 +22,7 @@ private:
 	int timeFactor;
 	int order;
 	int m;
-	int flag;
+	int state;
 	int DeadTime;
 	int oldDeadTime;
 	bool deadTimeFlag;
@@ -60,10 +60,12 @@ public:
 	void newSignalVector(float OutputNew,float InputNew);
 	void newCovarianceMatrix();
 	void newCorrectionVector(float OutputNew);
+	void calculateDeadtime(float OutputNew,float InputNew);
 	int newDeadTime();
+	float abs(float x);
 	float* calculateSystem(float OutputNew,float InputNew);
 	float* newParametersVector(float OutputNew);
-
+	float* resultParametersVector();
 };
 
 
