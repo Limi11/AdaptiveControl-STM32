@@ -70,8 +70,9 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2,1,1,true,1.0,-1.0);
-testsystem *PT1 = new testsystem(5);
+systemidentification *PT2 = new systemidentification(2,0.9,1,false,0,0);
+testsystem *PT1 = new testsystem(0);
+testsystem *PT12 = new testsystem(0);
 
 /* USER CODE END PV */
 
@@ -290,11 +291,30 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	    float *x;
 	  	i++;
 	  	osDelay(500);
-		float u = 1.0;
-		float *testdata = PT1->testsystem_output(u,2000.0);
-	 	float *result = PT2->calculateSystem(testdata[0],testdata[1]);
+
+	  	if(i<40)
+	  		{
+	  			float u = 1.0;
+	  			float *testdata = PT1->testsystem_output(u,2000.0);
+	  			x = testdata;
+	  		}
+	  	if(i == 40 || (i>40 && i<80))
+	  		{
+	  			float u = 0;
+	  			float *testdata = PT1->testsystem_output(u,2000.0);
+	  			x = testdata;
+	  		}
+	 	if(i >= 80)
+		  	{
+		  		float u = 1;
+		  		float *testdata = PT12->testsystem_output(u,2000.0);
+		  		x = testdata;
+		  	}
+
+	 	float *result = PT2->calculateSystem(x[0],x[1]);
 // .	printf("diff: %d  \r\n\r\n", i);
   }
   /* USER CODE END 5 */ 

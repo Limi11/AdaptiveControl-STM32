@@ -74,6 +74,10 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	{
 	calculateDeadtime(OutputNew, InputNew);
 	}
+	if(deadTimeFlag == false)
+	{
+		state = 3;
+	}
 
 
 
@@ -120,7 +124,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 
 void systemidentification::getError(float OutputNew)
 {
-	float yverif = sysVerification->verification_output(-signalVectornew->getElement(order),resultArray);
+	float yverif = sysVerification->verification_output(signalVectornew->getElement(order),resultArray);
 	error = abs(OutputNew-yverif);
  	printf("OutputNew: %.2f  \r\n\r\n", OutputNew);
  	printf("yverif: %.2f  \r\n\r\n", yverif);
@@ -296,12 +300,13 @@ void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 		}
 	else
 		{
-			oldDeadTime = DeadTime;
+
 			if(state == 0)
 			 {
 				 state = 1;
 			 }
 		}
+			oldDeadTime = DeadTime;
 			printf("DeadTime: %d  \r\n\r\n", oldDeadTime);
 }
 
