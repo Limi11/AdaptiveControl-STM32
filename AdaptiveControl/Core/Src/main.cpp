@@ -30,6 +30,7 @@
 #include "systemidentification.hpp"
 #include "testsystem.hpp"
 #include "debug.h"
+#include "deadbeat_controller.hpp"
 
 /* USER CODE END Includes */
 
@@ -73,6 +74,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 systemidentification *PT2 = new systemidentification(2,0.9,1,false,0,0);
 testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
+deadbeat_controller *controller = new deadbeat_controller(100,100,2);
 
 /* USER CODE END PV */
 
@@ -286,35 +288,20 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-	int i = 0;
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
+  float u = 0;
+  float w = 200;
+  float y = 0;
+
   for(;;)
   {
-	    float *x;
-	  	i++;
 	  	osDelay(500);
-
-	  	if(i<40)
-	  		{
-	  			float u = 1.0;
-	  			float *testdata = PT1->testsystem_output(u,2000.0);
-	  			x = testdata;
-	  		}
-	  	if(i == 40 || (i>40 && i<80))
-	  		{
-	  			float u = 0;
-	  			float *testdata = PT1->testsystem_output(u,2000.0);
-	  			x = testdata;
-	  		}
-	 	if(i >= 80)
-		  	{
-		  		float u = 1;
-		  		float *testdata = PT12->testsystem_output(u,2000.0);
-		  		x = testdata;
-		  	}
-
-	 	float *result = PT2->calculateSystem(x[0],x[1]);
+	  	float* system = PT1->testsystem_output(u,500);
+ 	 	float *result = PT2->calculateSystem(system[0],system[1]);
+ 	 	controller->getNewSystem(result);
+ 	 	controller->calculateNewController();
+ 	 	u = controller->controll(w-y);
 // .	printf("diff: %d  \r\n\r\n", i);
   }
   /* USER CODE END 5 */ 

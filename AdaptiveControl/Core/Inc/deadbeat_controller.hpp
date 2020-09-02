@@ -29,11 +29,13 @@ private:
 	float* aArray;
 	// this ist the coefficient b array of the system
 	float* bArray;
+	float* inputArray;
+	float* outputArray;
 
 public:
 	deadbeat_controller(int maxcontroloutput, int firstcontroloutput, int order);
 	~deadbeat_controller();
-	void getNewSystem(float* parray, float* qarray);
+	void getNewSystem(float* system);
 	void calculateNewController();
 	float controll(float input);
 };
