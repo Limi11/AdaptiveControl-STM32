@@ -290,19 +290,31 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  float u = 0;
-  float w = 200;
+  float u = 1;
+  float w = 50;
   float y = 0;
+  int initFlag = 0;
 
   for(;;)
   {
-	  	osDelay(500);
-	  	float* system = PT1->testsystem_output(u,500);
- 	 	float *result = PT2->calculateSystem(system[0],system[1]);
+	  osDelay(1000);
+	  if(initFlag < 10)
+	  {
+		  float* system = PT1->testsystem_output(u,1000);
+		  float *result = PT2->calculateSystem(system[0],system[1]);
+		  initFlag++;
+	  }
+	  else
+	  {
+		float* system = PT1->testsystem_output(u,1000);
+		float *result = PT2->calculateSystem(system[0],system[1]);
+		y = system[0];
  	 	controller->getNewSystem(result);
  	 	controller->calculateNewController();
  	 	u = controller->controll(w-y);
-// .	printf("diff: %d  \r\n\r\n", i);
+ 	 	printf("y: %.2f  \r\n\r\n", y);
+ 	 	printf("u: %.2f \r\n\r\n", u);
+	  }
   }
   /* USER CODE END 5 */ 
 }

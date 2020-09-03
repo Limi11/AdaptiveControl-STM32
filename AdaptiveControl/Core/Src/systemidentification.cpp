@@ -310,7 +310,7 @@ void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 			printf("DeadTime: %d  \r\n\r\n", oldDeadTime);
 }
 
-float* systemidentification::newParametersVector(float OutputNew)
+void systemidentification::newParametersVector(float OutputNew)
 {
 	float helpScalar = 0.0;
 
@@ -346,13 +346,15 @@ float* systemidentification::newParametersVector(float OutputNew)
 	#endif
 
 
-		for(int i=0; i<m; i++)
+/*		this part is now in method resultparametersVector
+ 	 	for(int i=0; i<m; i++)
 		{
 			resultArray[i] = parametersVector->getElement(i);
 		}
 
 		parametersVector->printVector("Result Parameters Vector:");
 		return resultArray;
+*/
 }
 
 float systemidentification::abs(float x)
