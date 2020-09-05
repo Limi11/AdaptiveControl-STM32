@@ -74,7 +74,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 systemidentification *PT2 = new systemidentification(2,0.9,1,false,0,0);
 testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
-deadbeat_controller *controller = new deadbeat_controller(100,100,2);
+deadbeat_controller *controller = new deadbeat_controller(2,2,2);
 
 /* USER CODE END PV */
 
@@ -290,7 +290,7 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  float u = 1;
+  float u = 2;
   float w = 50;
   float y = 0;
   int initFlag = 0;
@@ -298,7 +298,7 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
 	  osDelay(1000);
-	  if(initFlag < 10)
+	  if(initFlag < 50)
 	  {
 		  float* system = PT1->testsystem_output(u,1000);
 		  float *result = PT2->calculateSystem(system[0],system[1]);

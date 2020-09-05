@@ -15,9 +15,7 @@ deadbeat_controller::deadbeat_controller(int maxcontroloutput, int firstcontrolo
 :maxControlOutput(maxcontroloutput), firstControlOutput(firstcontroloutput), order(order),pArray(new float[order+1]), qArray(new float[order+1]),
  aArray(new float[order]), bArray(new float[order]),  inputArray(new float[order+1]), outputArray(new float[order+1])
 {
-	outputArray[0] = firstControlOutput;
-
-	for(int i=1; i<order; i++)
+	for(int i=0; i<order; i++)
 	{
 		outputArray[i] = 0;
 	}
@@ -54,7 +52,7 @@ void deadbeat_controller::getNewSystem(float* system)
 
 void deadbeat_controller::calculateNewController()
 {
-	float bsum;
+	float bsum = 0;
 
 	for(int i = 0; i<order; i++)
 	{
@@ -62,17 +60,24 @@ void deadbeat_controller::calculateNewController()
 	}
 
 	qArray[0] = firstControlOutput;
-	qArray[1] = firstControlOutput*(aArray[0]-1)+1/bsum;
-
-	pArray[0] =  firstControlOutput*bArray[0];
+	pArray[0] = 0;
+	qArray[1] = firstControlOutput*(aArray[0]-1)+(1/bsum);
+	pArray[1] =  firstControlOutput*bArray[0];
 
 	for(int i = 2; i<order; i++)
 	{
-		qArray[i] = firstControlOutput*(aArray[i]-aArray[i-1])+aArray[i-1]/bsum;
-		pArray[i] = firstControlOutput*(bArray[i]-bArray[i-1])+bArray[i-1]/bsum;
+		qArray[i] = firstControlOutput*(aArray[i]-aArray[i-1])+(aArray[i-1]/bsum);
+		pArray[i] = firstControlOutput*(bArray[i]-bArray[i-1])+(bArray[i-1]/bsum);
 	}
-	    qArray[order] = aArray[order]*(-firstControlOutput+1/bsum);
-	    pArray[order] = bArray[order]*(-firstControlOutput+1/bsum);
+	    qArray[order] = aArray[order-1]*(-firstControlOutput+(1/bsum));
+	    pArray[order] = -bArray[order-1]*(firstControlOutput-(1/bsum));
+
+		printf("qArray[0]: %.2f  \r\n\r\n", qArray[0]);
+		printf("qArray[1]: %.2f  \r\n\r\n", qArray[1]);
+		printf("qArray[2]: %.2f  \r\n\r\n", qArray[2]);
+		printf("pArray[0]: %.2f  \r\n\r\n", pArray[0]);
+		printf("pArray[1]: %.2f  \r\n\r\n", pArray[1]);
+		printf("pArray[2]: %.2f  \r\n\r\n", pArray[2]);
 }
 
 float deadbeat_controller::controll(float input)
@@ -84,7 +89,6 @@ float deadbeat_controller::controll(float input)
 			outputArray[i] = outputArray[i-1];
 		}
 
-
 	for(int i = (order-1); i>=1; i--)
 		{
 		inputArray[i] = inputArray[i-1];
@@ -92,13 +96,23 @@ float deadbeat_controller::controll(float input)
 
 	inputArray[0] = input;
 
-	for(int i =0; i<order; i++)
+	for(int i =0; i<=order; i++)
 	{
-	output += (-1) * pArray[i] * inputArray[i] + qArray[i] * outputArray[i];
+	output += (-1) * pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
 	}
-	output += firstControlOutput;
+//	output += firstControlOutput; I think that's wrong
 
 	outputArray[0] = output;
+
+	// check maximum and minimum output
+	if(output < 0)
+	{
+		output = 0;
+	}
+	if(output > 2)
+	{
+		output = 2;
+	}
 
 	return output;
 }
