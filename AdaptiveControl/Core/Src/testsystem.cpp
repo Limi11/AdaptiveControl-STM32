@@ -15,11 +15,11 @@ testsystem::testsystem(int deadtime)
 
 float* testsystem::testsystem_output(float u, int t)
 {
-	if(flag == 0)
-	{
-		u = 0;
-		flag = 1;
-	}
+//	if(flag == 0)
+//	{
+//		u = 0;
+//		flag = 1;
+//	}
 
 	if(deadTimeTimer != 0 && u != 0)
 	{

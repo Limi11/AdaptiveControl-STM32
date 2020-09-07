@@ -71,10 +71,10 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2,0.9,1,false,0,0);
+systemidentification *PT2 = new systemidentification(2,0.98,0,false,0,0);
 testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
-deadbeat_controller *controller = new deadbeat_controller(2,2,2);
+deadbeat_controller *controller = new deadbeat_controller(2,20,2);
 
 /* USER CODE END PV */
 
@@ -297,7 +297,7 @@ void StartDefaultTask(void *argument)
 
   for(;;)
   {
-	  osDelay(1000);
+	  osDelay(100);
 	  if(initFlag < 50)
 	  {
 		  float* system = PT1->testsystem_output(u,1000);
@@ -308,10 +308,11 @@ void StartDefaultTask(void *argument)
 	  {
 		float* system = PT1->testsystem_output(u,1000);
 		float *result = PT2->calculateSystem(system[0],system[1]);
-		y = system[0];
+		float controlDelta = w-system[0];
  	 	controller->getNewSystem(result);
  	 	controller->calculateNewController();
- 	 	u = controller->controll(w-y);
+
+ 	 	u = controller->controll(controlDelta);
  	 	printf("y: %.2f  \r\n\r\n", y);
  	 	printf("u: %.2f \r\n\r\n", u);
 	  }

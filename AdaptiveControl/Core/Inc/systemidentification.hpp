@@ -59,7 +59,7 @@ public:
 	void getError(float OutputNew);
 	void newSignalVector(float OutputNew,float InputNew);
 	void newCovarianceMatrix();
-	void newCorrectionVector(float OutputNew);
+	void newCorrectionVector();
 	void calculateDeadtime(float OutputNew,float InputNew);
 	int newDeadTime();
 	float abs(float x);

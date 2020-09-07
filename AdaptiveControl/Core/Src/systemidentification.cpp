@@ -67,8 +67,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	// internal states
 	// deadTimeFlag = 0
 	// first init round = 1
-	// second init round = 2
-	// system calculation = 3
+	// system calculation = 2
 
 	if(deadTimeFlag == true)
 	{
@@ -76,7 +75,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	}
 	if(deadTimeFlag == false)
 	{
-		state = 3;
+		state = 1;
 	}
 
 
@@ -98,9 +97,9 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	// y = Output
 
 	// the first two rounds without newCovarianceMatrix
-	if(state != 0 && error>tolerance)
+	if(state != 0 && error>=tolerance)
 	{
-		if(state == 3)
+		if(state == 2)
 		{
 		newCovarianceMatrix();
 		}
@@ -112,7 +111,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 		*signalVector = *signalVectornew;
 		// set new signalVector k+1
 		newSignalVector(OutputNew,InputNew);
-		newCorrectionVector(OutputNew);
+		newCorrectionVector();
 		newParametersVector(OutputNew);
 	}
 
@@ -210,7 +209,7 @@ void systemidentification::newCovarianceMatrix()
 #endif
 }
 
-void systemidentification::newCorrectionVector(float OutputNew)
+void systemidentification::newCorrectionVector()
 {
 	float helpScalar = 0.0;
 
@@ -317,7 +316,7 @@ void systemidentification::newParametersVector(float OutputNew)
 	// ********* calculate new parameter vector *********
 		// formula: O(k)=O(k-1)+K(k-1)*(y(k)-Y(k)'*O(k-1))
 
-		// calculate helpScalar = (y(k)-Y'(k)*O(k-1))
+		// calculate helpScalar = (y(k+1)-Y'(k)*O(k-1))
 
 		helpScalar = OutputNew - signalVector->dot(*parametersVector);
 

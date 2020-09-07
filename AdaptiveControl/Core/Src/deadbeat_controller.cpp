@@ -82,14 +82,14 @@ void deadbeat_controller::calculateNewController()
 
 float deadbeat_controller::controll(float input)
 {
-	float output;
+	float output = 0;
 
-	for(int i=(order-1); i>=1 ; i--)
+	for(int i=(order); i>=1 ; i--)
 		{
 			outputArray[i] = outputArray[i-1];
 		}
 
-	for(int i = (order-1); i>=1; i--)
+	for(int i = (order); i>=1; i--)
 		{
 		inputArray[i] = inputArray[i-1];
 		}
@@ -99,20 +99,24 @@ float deadbeat_controller::controll(float input)
 	for(int i =0; i<=order; i++)
 	{
 	output += (-1) * pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
+	printf("qArray[i]: %.2f  \r\n\r\n", qArray[i]);
+	printf("pArray[i]: %.2f  \r\n\r\n", pArray[i]);
+	printf("outputArray[i]: %.2f  \r\n\r\n", outputArray[i]);
+	printf("inputArray[i]: %.2f  \r\n\r\n", inputArray[i]);
 	}
 //	output += firstControlOutput; I think that's wrong
-
-	outputArray[0] = output;
 
 	// check maximum and minimum output
 	if(output < 0)
 	{
 		output = 0;
 	}
-	if(output > 2)
+	if(output > 20)
 	{
-		output = 2;
+		output = 20;
 	}
+
+	outputArray[0] = output;
 
 	return output;
 }
