@@ -10,7 +10,7 @@
 
 
 testsystem::testsystem(int deadtime)
-	:y(0.0),ylast(0.0),u(0.0),deltaT(5),T(3600),Kpt1(200), flag(0), output(new float[2]), deadTime(deadtime), deadTimeTimer(deadtime)
+	:y(0.0),ylast(0.0),u(0.0),deltaT(5),T(360),Kpt1(200), flag(0), output(new float[2]), deadTime(deadtime), deadTimeTimer(deadtime)
 	{};
 
 float* testsystem::testsystem_output(float u, int t)
