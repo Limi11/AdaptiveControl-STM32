@@ -74,7 +74,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 systemidentification *PT2 = new systemidentification(2,0.95,0,false,0,0);
 testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
-deadbeat_controller *controller = new deadbeat_controller(2,2,2);
+deadbeat_controller *controller = new deadbeat_controller(2,6,2);
 
 /* USER CODE END PV */
 
@@ -296,22 +296,37 @@ void StartDefaultTask(void *argument)
   int initFlag = 0;
 
   for(;;)
-  {
-	  osDelay(100);
-	  if(initFlag < 50)
+  	  {
+// system learning phase
+	  if(initFlag < 100)
 	  {
-		  float* system = PT1->testsystem_output(u,1000);
-		  float *result = PT2->calculateSystem(system[0],system[1]);
-		  initFlag++;
+		  for(int i = 0; i<10; i++)
+		  {
+			  osDelay(100);
+			  float* system = PT1->testsystem_output((i/2),1000);
+		  	  float *result = PT2->calculateSystem(system[0],system[1]);
+		  	  initFlag++;
+		  }
+
+	  }
+	  if(initFlag < 200)
+	  {
+		  for(int i = 0; i<10; i++)
+		  {
+			  osDelay(100);
+			  float* system = PT1->testsystem_output((0),1000);
+		  	  float *result = PT2->calculateSystem(system[0],system[1]);
+		  	  initFlag++;
+		  }
 	  }
 	  else
 	  {
 		float* system = PT1->testsystem_output(u,1000);
 		float *result = PT2->calculateSystem(system[0],system[1]);
 		float controlDelta = w-system[0];
- 	 	controller->getNewSystem(result);
- 	 	controller->calculateNewController();
- 	 	u = controller->controll(controlDelta);
+	 	controller->getNewSystem(result);
+	 	controller->calculateNewController();
+	 	u = controller->controll(controlDelta);
  	 	printf("y: %.2f  \r\n\r\n", y);
  	 	printf("u: %.2f \r\n\r\n", u);
 	  }

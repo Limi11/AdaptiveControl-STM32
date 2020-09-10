@@ -2,7 +2,8 @@
  * optimal_controller.cpp
  *
  *  Created on: 20.07.2020
- *      Author: User
+ *      Author: Milan Liebsch
+ *      Comment: Deadbeat Controller extrem hard for parametration
  */
 
 
@@ -13,7 +14,7 @@
 
 deadbeat_controller::deadbeat_controller(int maxcontroloutput, int firstcontroloutput, int order)
 :maxControlOutput(maxcontroloutput), firstControlOutput(firstcontroloutput), order(order),pArray(new float[order+1]), qArray(new float[order+1]),
- aArray(new float[order]), bArray(new float[order]),  inputArray(new float[order+1]), outputArray(new float[order+1])
+ aArray(new float[order]), bArray(new float[order]),  inputArray(new float[order+1]), outputArray(new float[order+1]), firstRound(0)
 {
 	for(int i=0; i<order+1; i++)
 	{
@@ -60,7 +61,7 @@ void deadbeat_controller::calculateNewController()
 	}
 
 	qArray[0] = firstControlOutput;
-	pArray[0] = 1;
+	pArray[0] = -1;
 	qArray[1] = firstControlOutput*(aArray[0]-1)+(1/bsum);
 	pArray[1] = firstControlOutput*bArray[0];
 
@@ -71,21 +72,20 @@ void deadbeat_controller::calculateNewController()
 	}
 	    qArray[order+1] = aArray[order-1]*(-firstControlOutput+(1/bsum));
 	    pArray[order+1] = -bArray[order-1]*(firstControlOutput-(1/bsum));
-
-/*		printf("qArray[0]: %.2f  \r\n\r\n", qArray[0]);
-		printf("pArray[0]: %.2f  \r\n\r\n", pArray[0]);
-		printf("qArray[1]: %.2f  \r\n\r\n", qArray[1]);
-		printf("pArray[1]: %.2f  \r\n\r\n", pArray[1]);
-		printf("qArray[2]: %.2f  \r\n\r\n", qArray[2]);
-		printf("pArray[2]: %.2f  \r\n\r\n", pArray[2]);
-		printf("qArray[3]: %.2f  \r\n\r\n", qArray[3]);
-		printf("pArray[3]: %.2f  \r\n\r\n", pArray[3]); */
 }
 
 
 float deadbeat_controller::controll(float input)
 {
 	float output = 0;
+
+	if(firstRound == 0)
+	{
+		output = qArray[0];
+		firstRound++;
+	}
+	else
+	{
 
 	for(int i=(order+1); i>=1 ; i--)
 		{
@@ -99,29 +99,30 @@ float deadbeat_controller::controll(float input)
 
 	inputArray[0] = input;
 
-	for(int i =0; i<=order+1; i++)
+	for(int i=0; i<=order+1; i++)
 	{
-	output += (-1) * pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
+	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
+	/*
 	printf("qArray[i]: %.2f  \r\n\r\n", qArray[i]);
 	printf("pArray[i]: %.2f  \r\n\r\n", pArray[i]);
 	printf("outputArray[i]: %.2f  \r\n\r\n", outputArray[i]);
 	printf("inputArray[i]: %.2f  \r\n\r\n", inputArray[i]);
+	*/
 	}
-	output += firstControlOutput; I think that's wrong
+	}
 
-	// check maximum and minimum output
-	if(output < 0)
-	{
-		output = 0;
-	}
 	if(output > firstControlOutput)
 	{
 		output = firstControlOutput;
 	}
-
+	if(output < -firstControlOutput)
+	{
+		output = -firstControlOutput;
+	}
 	outputArray[0] = output;
 
 	return output;
+
 }
 
 

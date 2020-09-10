@@ -31,6 +31,7 @@ private:
 	float* bArray;
 	float* inputArray;
 	float* outputArray;
+	int firstRound;
 
 public:
 	deadbeat_controller(int maxcontroloutput, int firstcontroloutput, int order);
