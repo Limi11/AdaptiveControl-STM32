@@ -298,35 +298,32 @@ void StartDefaultTask(void *argument)
   for(;;)
   	  {
 // system learning phase
-	  if(initFlag < 100)
-	  {
-		  for(int i = 0; i<10; i++)
-		  {
-			  osDelay(100);
-			  float* system = PT1->testsystem_output((i/2),1000);
-		  	  float *result = PT2->calculateSystem(system[0],system[1]);
-		  	  initFlag++;
-		  }
-
-	  }
 	  if(initFlag < 200)
 	  {
-		  for(int i = 0; i<10; i++)
+		  for(int i = 0; i<6; i++)
 		  {
-			  osDelay(100);
-			  float* system = PT1->testsystem_output((0),1000);
+			  float* system = PT1->testsystem_output((i/2),1000);
 		  	  float *result = PT2->calculateSystem(system[0],system[1]);
+		  	  controller->getNewSystem(result);
 		  	  initFlag++;
 		  }
+		  for(int i = 0; i<6; i++)
+		  {
+				float* system = PT1->testsystem_output((0),1000);
+				float *result = PT2->calculateSystem(system[0],system[1]);
+				initFlag++;
+		  }
+
 	  }
 	  else
 	  {
 		float* system = PT1->testsystem_output(u,1000);
 		float *result = PT2->calculateSystem(system[0],system[1]);
 		float controlDelta = w-system[0];
+		controller->getInputs(controlDelta);
 	 	controller->getNewSystem(result);
 	 	controller->calculateNewController();
-	 	u = controller->controll(controlDelta);
+	 	u = controller->controll();
  	 	printf("y: %.2f  \r\n\r\n", y);
  	 	printf("u: %.2f \r\n\r\n", u);
 	  }

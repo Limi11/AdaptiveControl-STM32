@@ -36,9 +36,10 @@ private:
 public:
 	deadbeat_controller(int maxcontroloutput, int firstcontroloutput, int order);
 	~deadbeat_controller();
+	void getInputs(float input);
 	void getNewSystem(float* system);
 	void calculateNewController();
-	float controll(float input);
+	float controll();
 };
 
 

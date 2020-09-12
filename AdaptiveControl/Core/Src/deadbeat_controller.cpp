@@ -37,9 +37,20 @@ deadbeat_controller::~deadbeat_controller()
 	delete outputArray;
 }
 
-void deadbeat_controller::getNewSystem(float* system)
+
+void deadbeat_controller::getInputs(float input)
 {
 
+	for(int i = (order); i>=1; i--)
+	{
+		inputArray[i] = inputArray[i-1];
+	}
+
+	inputArray[0] = input;
+}
+
+void deadbeat_controller::getNewSystem(float* system)
+{
 	for(int i=0; i<order; i++)
 		{
 		aArray[i] = system[i];
@@ -75,31 +86,11 @@ void deadbeat_controller::calculateNewController()
 }
 
 
-float deadbeat_controller::controll(float input)
+float deadbeat_controller::controll()
 {
 	float output = 0;
 
-	if(firstRound == 0)
-	{
-		output = qArray[0];
-		firstRound++;
-	}
-	else
-	{
-
-	for(int i=(order+1); i>=1 ; i--)
-		{
-			outputArray[i] = outputArray[i-1];
-		}
-
-	for(int i = (order+1); i>=1; i--)
-		{
-		inputArray[i] = inputArray[i-1];
-		}
-
-	inputArray[0] = input;
-
-	for(int i=0; i<=order+1; i++)
+	for(int i=0; i<=order+2; i++)
 	{
 	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
 	/*
@@ -109,20 +100,24 @@ float deadbeat_controller::controll(float input)
 	printf("inputArray[i]: %.2f  \r\n\r\n", inputArray[i]);
 	*/
 	}
-	}
 
 	if(output > firstControlOutput)
 	{
 		output = firstControlOutput;
 	}
-	if(output < -firstControlOutput)
+	if(output < 0)
 	{
-		output = -firstControlOutput;
+		output = 0;
 	}
+
+	for(int i=(order); i>=1 ; i--)
+	{
+		outputArray[i] = outputArray[i-1];
+	}
+
 	outputArray[0] = output;
 
 	return output;
-
 }
 
 
