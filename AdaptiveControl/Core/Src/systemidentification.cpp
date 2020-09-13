@@ -123,7 +123,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 
 void systemidentification::getError(float OutputNew)
 {
-	float yverif = sysVerification->verification_output(signalVectornew->getElement(order),resultArray);
+	float yverif = sysVerification->verification_output(signalVectornew->getElement(order),resultArray, DeadTime);
 	error = abs(OutputNew-yverif);
  	printf("OutputNew: %.2f  \r\n\r\n", OutputNew);
  	printf("yverif: %.2f  \r\n\r\n", yverif);

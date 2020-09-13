@@ -24,13 +24,15 @@ private:
 	float u;
 	// u vector
 	float* uVec;
+	// deadtime
+	int deadtime;
 
 
 public:
 
 	verification(int order);
 	~verification();
-	float verification_output(float x,const float* ab);
+	float verification_output(float x,const float* ab,int deadtime);
 
 };
 

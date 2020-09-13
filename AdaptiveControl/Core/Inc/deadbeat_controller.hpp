@@ -17,7 +17,6 @@
 class deadbeat_controller
 {
 private:
-	int maxControlOutput;
 	int firstControlOutput;
 	int deadtime;
 	int order;
@@ -34,10 +33,10 @@ private:
 	int firstRound;
 
 public:
-	deadbeat_controller(int maxcontroloutput, int firstcontroloutput, int order);
+	deadbeat_controller(int firstControlOutput, int order);
 	~deadbeat_controller();
 	void getInputs(float input);
-	void getNewSystem(float* system);
+	void getNewSystem(float* system, int deadtime);
 	void calculateNewController();
 	float controll();
 };

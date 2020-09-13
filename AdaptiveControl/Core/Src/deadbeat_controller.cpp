@@ -12,16 +12,16 @@
 #include <stdio.h>
 
 
-deadbeat_controller::deadbeat_controller(int maxcontroloutput, int firstcontroloutput, int order)
-:maxControlOutput(maxcontroloutput), firstControlOutput(firstcontroloutput), order(order),pArray(new float[order+1]), qArray(new float[order+1]),
- aArray(new float[order]), bArray(new float[order]),  inputArray(new float[order+1]), outputArray(new float[order+1]), firstRound(0)
+deadbeat_controller::deadbeat_controller(int firstcontroloutput, int order)
+:firstControlOutput(firstcontroloutput),deadtime(0),order(order),pArray(new float[order+1]), qArray(new float[order+1]),
+ aArray(new float[order]), bArray(new float[order]),  inputArray(new float[order+20]), outputArray(new float[order+1]), firstRound(0)
 {
 	for(int i=0; i<order+1; i++)
 	{
 		outputArray[i] = 0;
 	}
 
-	for(int i=0; i<order+1; i++)
+	for(int i=0; i<order+1+deadtime; i++)
 	{
 		inputArray[i] = 0;
 	}
@@ -41,7 +41,7 @@ deadbeat_controller::~deadbeat_controller()
 void deadbeat_controller::getInputs(float input)
 {
 
-	for(int i = (order+1); i>=1; i--)
+	for(int i = (order+1+deadtime); i>=1; i--)
 	{
 		inputArray[i] = inputArray[i-1];
 	}
@@ -49,7 +49,7 @@ void deadbeat_controller::getInputs(float input)
 	inputArray[0] = input;
 }
 
-void deadbeat_controller::getNewSystem(float* system)
+void deadbeat_controller::getNewSystem(float* system, int deadtime)
 {
 	for(int i=0; i<order; i++)
 		{
@@ -92,7 +92,7 @@ float deadbeat_controller::controll()
 
 	for(int i=0; i<=order+2; i++)
 	{
-	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
+	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i+deadtime];
 	/*
 	printf("qArray[i]: %.2f  \r\n\r\n", qArray[i]);
 	printf("pArray[i]: %.2f  \r\n\r\n", pArray[i]);
