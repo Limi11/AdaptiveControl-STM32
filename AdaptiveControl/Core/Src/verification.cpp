@@ -14,9 +14,13 @@ verification::verification(int order)
 {
 		for(int i=0; i<order; i++)
 		{
-		yVec[i] = 0;
 		uVec[i] = 0;
 		}
+		for(int i=0; i<order+20; i++)
+		{
+		yVec[i] = 0;
+		}
+
 };
 
 verification::~verification()
