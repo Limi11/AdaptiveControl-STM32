@@ -71,7 +71,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2,0.95,0,true,0.4,-0.4);
+systemidentification *PT2 = new systemidentification(2,0.95,0,true,0.4,10);
 testsystem *PT1 = new testsystem(2);
 testsystem *PT12 = new testsystem(0);
 deadbeat_controller *controller = new deadbeat_controller(6,2);
@@ -305,7 +305,7 @@ void StartDefaultTask(void *argument)
 		  for(int i = 12; i<=12; i++)
 		{
 			 float* system = PT1->testsystem_output((i/2),1000);
-			 float *result = PT2->calculateSystem(system[0],system[1]);
+			 float *result = PT2->calculateSystem(system[0],system[1],0);
 			 deadtime = PT2->newDeadTime();
 			 controller->getNewSystem(result,deadtime);
 			 initFlag++;
@@ -313,7 +313,7 @@ void StartDefaultTask(void *argument)
 		  for(int i = 12; i>=0; i--)
 		  {
 			  float* system = PT1->testsystem_output((i/2),1000);
-		  	  float *result = PT2->calculateSystem(system[0],system[1]);
+		  	  float *result = PT2->calculateSystem(system[0],system[1],0);
 		  	  deadtime = PT2->newDeadTime();
 		  	  controller->getNewSystem(result,deadtime);
 		  	  initFlag++;
@@ -321,7 +321,7 @@ void StartDefaultTask(void *argument)
 		  for(int i = 12; i<=12; i++)
 		  {
 			   float* system = PT1->testsystem_output((-i/2),1000);
-			   float *result = PT2->calculateSystem(system[0],system[1]);
+			   float *result = PT2->calculateSystem(system[0],system[1],0);
 			   deadtime = PT2->newDeadTime();
 			   controller->getNewSystem(result,deadtime);
 			   initFlag++;
@@ -331,7 +331,7 @@ void StartDefaultTask(void *argument)
 	  {
 // test adaptive control
 		float* system = PT1->testsystem_output(u,1000);
-		float *result = PT2->calculateSystem(system[0],system[1]);
+		float *result = PT2->calculateSystem(system[0],system[1],0);
 		deadtime = PT2->newDeadTime();
 		float controlDelta = w-system[0];
 		controller->getInputs(controlDelta);

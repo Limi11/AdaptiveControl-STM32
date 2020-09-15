@@ -26,10 +26,10 @@ private:
 	int DeadTime;
 	int oldDeadTime;
 	bool deadTimeFlag;
-	float deadTimeBorderHigh;
-	float deadTimeBorderLow;
+	float deadTimeTolerance;
+	int deadTimeMaxTimesteps;
 	float expoForget;
-	float tolerance;
+	float errorTolerance;
 	float error;
 	float measuredOutputNew;
 	float measuredOutputOld;
@@ -52,7 +52,7 @@ private:
 
 public:
 
-	systemidentification(int order, float expoForget, float tolerance, bool deadtime, float BorderHigh, float BorderLow);
+	systemidentification(int order, float expoForget, float errorTolerance, bool deadtime, float deadtimeTolerance, int deadtimeMaxTimesteps);
 	~systemidentification();
 
 
@@ -63,7 +63,7 @@ public:
 	void calculateDeadtime(float OutputNew,float InputNew);
 	int newDeadTime();
 	float abs(float x);
-	float* calculateSystem(float OutputNew,float InputNew);
+	float* calculateSystem(float OutputNew,float InputNew, int Startup);
 	void newParametersVector(float OutputNew);
 	float* resultParametersVector();
 };

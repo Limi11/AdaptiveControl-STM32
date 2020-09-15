@@ -12,14 +12,14 @@
 
 
 
-systemidentification::systemidentification(int order, float expoForget, float tolerance, bool deadtime, float BorderHigh, float BorderLow)
-:timeFactor(10000),order(order),m(2*order),state(1),expoForget(expoForget),error(0.0),tolerance(tolerance),
- measuredOutputNew(0.0), measuredOutputOld(0.0),deadTimeFlag(deadtime), deadTimeBorderHigh(BorderHigh), deadTimeBorderLow(BorderLow), oldDeadTime(0), DeadTime(0),
+systemidentification::systemidentification(int order, float expoForget, float errorTolerance, bool deadtime, float deadtimeTolerance, int deadtimeMaxTimesteps)
+:timeFactor(10000),order(order),m(2*order),state(1),expoForget(expoForget),error(0.0),errorTolerance(errorTolerance),
+ measuredOutputNew(0.0), measuredOutputOld(0.0),deadTimeFlag(deadtime), deadTimeTolerance(deadtimeTolerance), deadTimeMaxTimesteps(deadtimeMaxTimesteps), oldDeadTime(0), DeadTime(0),
  signalInput(new float[order]), signalOutput(new float[order]),
  estimatedValue(0.0),resultArray(new float[m]),
  parametersVector(new vector<float>(order,0.0)),
- signalVectornew(new vector<float>(order,0.0)),
- signalVector(new vector<float>(order,0.0)),
+ signalVectornew(new vector<float>(m,0.0)),
+ signalVector(new vector<float>(m,0.0)),
  correctionVector(new vector<float>(order,0.0)),
  lastcorrectionVector(new vector<float>(order,0.0)),
  helpVector(new vector<float>(order,0.0)),
@@ -35,6 +35,9 @@ systemidentification::systemidentification(int order, float expoForget, float to
 		{
 		covarianceMatrix->setElement(i,i,100000.0);
 		unitMatrix->setElement(i,i,1.0);
+		}
+	for(int i=0; i<order; i++)
+		{
 		signalInput[i]=0.0;
 		signalOutput[i]=0.0;
 		}
@@ -56,7 +59,7 @@ systemidentification::~systemidentification()
 	delete helpMatrix;
 }
 
-float* systemidentification::calculateSystem(float OutputNew,float InputNew)
+float* systemidentification::calculateSystem(float OutputNew,float InputNew, int Startup)
 {
 
 #ifdef _DEBUG
@@ -69,15 +72,17 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	// first init round = 1
 	// system calculation = 2
 
-	if(deadTimeFlag == true)
+	if(Startup == 1)
 	{
-	calculateDeadtime(OutputNew, InputNew);
+		if(deadTimeFlag == true)
+		{
+			calculateDeadtime(OutputNew, InputNew);
+		}
+		if(deadTimeFlag == false)
+		{
+			state = 1;
+		}
 	}
-	if(deadTimeFlag == false)
-	{
-		state = 1;
-	}
-
 
 
 #ifdef _DEBUG
@@ -97,7 +102,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	// y = Output
 
 	// the first two rounds without newCovarianceMatrix
-	if(state != 0 && error>=tolerance)
+	if(error>=errorTolerance)
 	{
 		if(state == 2)
 		{
@@ -281,9 +286,10 @@ void systemidentification::newCorrectionVector()
 
 void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 {
+	float OutputOld = signalOutput[1];
 
 	// deadtime is only calculated on a new system jump from zero
-	if(OutputNew < deadTimeBorderHigh && OutputNew > deadTimeBorderLow)
+	if(OutputNew <= OutputOld+deadTimeTolerance && OutputNew >= OutputOld-deadTimeTolerance)
 		{
 			// reset on new deadtime calculation
 			if(state != 0)
