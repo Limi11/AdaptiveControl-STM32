@@ -13,34 +13,38 @@
 
 
 systemidentification::systemidentification(int order, float expoForget, float errorTolerance, bool deadtime, float deadtimeTolerance, int deadtimeMaxTimesteps)
-:timeFactor(10000),order(order),m(2*order),state(1),expoForget(expoForget),error(0.0),errorTolerance(errorTolerance),
- measuredOutputNew(0.0), measuredOutputOld(0.0),deadTimeFlag(deadtime), deadTimeTolerance(deadtimeTolerance), deadTimeMaxTimesteps(deadtimeMaxTimesteps), oldDeadTime(0), DeadTime(0),
- signalInput(new float[order]), signalOutput(new float[order]),
+:timeFactor(10000),order(order),m(2*order),state(0),expoForget(expoForget),error(0.0),errorTolerance(errorTolerance),
+ measuredOutputNew(0.0), measuredOutputOld(0.0),deadTimeFlag(deadtime), deadTimeTolerance(deadtimeTolerance), deadTimeMaxTimesteps(deadtimeMaxTimesteps), oldDeadTime(0), deadTime(0),
+ signalInput(new float[order]), signalOutput(new float[order]),deadTimeVector(new float[deadtimeMaxTimesteps]),
  estimatedValue(0.0),resultArray(new float[m]),
  parametersVector(new vector<float>(order,0.0)),
- signalVectornew(new vector<float>(m,0.0)),
- signalVector(new vector<float>(m,0.0)),
+ signalVectornew(new vector<float>(order,0.0)),
+ signalVector(new vector<float>(order,0.0)),
  correctionVector(new vector<float>(order,0.0)),
  lastcorrectionVector(new vector<float>(order,0.0)),
  helpVector(new vector<float>(order,0.0)),
  covarianceMatrix(new matrix<float>(order,0.0)),
  unitMatrix(new matrix<float>(order,0.0)),
  helpMatrix(new matrix<float>(order,0.0)),
- sysVerification(new verification(order))
+ sysVerification(new verification(order,deadtimeMaxTimesteps))
 {
 	// add some special values to covariance- and unit- matrix
 	//covarianceMatrix({1000.0,0.0,0.0,0.0},{0.0,1000.0,0.0,0.0},{0.0,0.0,1000.0,0.0},{0.0,0.0,0.0,1000.0})
 	//, unitMatrix({1.0,0.0,0.0,0.0},{0.0,1.0,0.0,0.0},{0.0,0.0,1.0,0.0},{0.0,0.0,0.0,1.0};
 	for(int i=0; i<m; i++)
-		{
+	{
 		covarianceMatrix->setElement(i,i,100000.0);
 		unitMatrix->setElement(i,i,1.0);
-		}
+	}
 	for(int i=0; i<order; i++)
-		{
+	{
 		signalInput[i]=0.0;
 		signalOutput[i]=0.0;
-		}
+	}
+	for(int i=0; i<deadtimeMaxTimesteps; i++)
+	{
+		deadTimeVector[i]=0.0;
+	}
 }
 
 systemidentification::~systemidentification()
@@ -57,6 +61,7 @@ systemidentification::~systemidentification()
 	delete covarianceMatrix;
 	delete unitMatrix;
 	delete helpMatrix;
+	delete deadTimeVector;
 }
 
 float* systemidentification::calculateSystem(float OutputNew,float InputNew, int Startup)
@@ -68,7 +73,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 #endif
 
 	// internal states
-	// deadTimeFlag = 0
+	// deadtime calculation = 0
 	// first init round = 1
 	// system calculation = 2
 
@@ -77,8 +82,17 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 		if(deadTimeFlag == true)
 		{
 			calculateDeadtime(OutputNew, InputNew);
+			*signalVector = *signalVectornew;
+			newSignalVector(OutputNew,InputNew);
 		}
-		if(deadTimeFlag == false)
+		else
+		{
+			state = 1;
+		}
+	}
+	else
+	{
+		if(state == 0)
 		{
 			state = 1;
 		}
@@ -102,7 +116,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 	// y = Output
 
 	// the first two rounds without newCovarianceMatrix
-	if(error>=errorTolerance)
+	if(error>=errorTolerance && state>0)
 	{
 		if(state == 2)
 		{
@@ -121,14 +135,21 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 	}
 
 	// we need the new calculation error to decide if we want to start or stop identification
-	getError(OutputNew);
+	if(deadTime == 0)
+	{
+		getError(OutputNew);
+	}
+	else
+	{
+		getError(deadTimeVector[deadTime]);
+	}
 
 	return resultParametersVector();
 }
 
 void systemidentification::getError(float OutputNew)
 {
-	float yverif = sysVerification->verification_output(signalVectornew->getElement(order),resultArray, DeadTime);
+	float yverif = sysVerification->verification_output(signalVectornew->getElement(order),resultArray, deadTime);
 	error = abs(OutputNew-yverif);
  	printf("OutputNew: %.2f  \r\n\r\n", OutputNew);
  	printf("yverif: %.2f  \r\n\r\n", yverif);
@@ -138,8 +159,10 @@ void systemidentification::getError(float OutputNew)
 void systemidentification::newSignalVector(float OutputNew,float InputNew)
 {
 	// Now we need to update the signalVector, the old k gets k-1, the old k-1 gets k-2 ...
-		// The new k comes from the input values. The signal vector saves the output values from
-		// 0 until order/2 and the input values from order/2 until order
+	// The new k comes from the input values. The signal vector saves the output values from
+	// 0 until order/2 and the input values from order/2 until order
+	// if there is a deadtime the new signalVectors input will be delayed k will be k+d
+
 
 	#ifdef _DEBUG
 		printf("\r\n\r\n");
@@ -150,16 +173,29 @@ void systemidentification::newSignalVector(float OutputNew,float InputNew)
 		// we need to start at the end of the signal input or output otherwise we will lose information !
 		for(int i=(order-1); i>0; i--)
 		{
-		signalVectornew->setElement(i,signalVectornew->getElement(i-1));
+			signalVectornew->setElement(i,signalVectornew->getElement(i-1));
 		}
 
-		for(int i=m; i>order; i--)
+		for(int i=(m-1); i>order; i--)
 		{
-		signalVectornew->setElement(i,signalVectornew->getElement(i-1));
+			signalVectornew->setElement(i,signalVectornew->getElement(i-1));
 		}
 
-		// we need negative y values! therefore -OutputNew ! see source of algorithm RLS
-		signalVectornew->setElement(0,-OutputNew);
+		if(deadTime != 0)
+		{
+			for(int i=deadTime-1; i>0; i--)
+			{
+				deadTimeVector[i]=deadTimeVector[i-1];
+			}
+			deadTimeVector[0]=OutputNew;
+			signalVectornew->setElement(0,-deadTimeVector[deadTime-1]);
+		}
+		else
+		{
+			// we need negative y values! therefore -OutputNew ! see source of algorithm RLS
+			signalVectornew->setElement(0,-OutputNew);
+		}
+
 		signalVectornew->setElement(order,InputNew);
 
 
@@ -294,12 +330,12 @@ void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 			// reset on new deadtime calculation
 			if(state != 0)
 			{
-				DeadTime = 0;
+				deadTime = 0;
 			}
 			// if there is a input we count the time steps until the system reacts
 			if(InputNew != 0)
 			{
-				DeadTime++;
+				deadTime++;
 			}
 				state = 0;
 		}
@@ -311,7 +347,7 @@ void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 				 state = 1;
 			 }
 		}
-			oldDeadTime = DeadTime;
+			oldDeadTime = deadTime;
 			printf("DeadTime: %d  \r\n\r\n", oldDeadTime);
 }
 
@@ -373,7 +409,7 @@ float systemidentification::abs(float x)
 
 int systemidentification::newDeadTime()
 {
-	return DeadTime;
+	return deadTime;
 }
 
 float* systemidentification::resultParametersVector()

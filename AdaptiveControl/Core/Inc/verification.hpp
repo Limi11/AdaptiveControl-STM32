@@ -26,11 +26,13 @@ private:
 	float* uVec;
 	// deadtime
 	int deadtime;
+	//
+	float* deadTimeVector;
 
 
 public:
 
-	verification(int order);
+	verification(int order, int deadTimeMaxTimesteps);
 	~verification();
 	float verification_output(float x,const float* ab,int deadtime);
 

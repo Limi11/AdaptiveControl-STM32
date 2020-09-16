@@ -18,7 +18,8 @@ class deadbeat_controller
 {
 private:
 	int firstControlOutput;
-	int deadtime;
+	int deadTime;
+	float* deadtimeVector;
 	int order;
 	// this is the coefficient p array of the controller
 	float* pArray;
@@ -33,7 +34,7 @@ private:
 	int firstRound;
 
 public:
-	deadbeat_controller(int firstControlOutput, int order);
+	deadbeat_controller(int firstControlOutput, int order, int deadtimeMaxTimesteps);
 	~deadbeat_controller();
 	void getInputs(float input);
 	void getNewSystem(float* system, int deadtime);

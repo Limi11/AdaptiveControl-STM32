@@ -23,7 +23,7 @@ private:
 	int order;
 	int m;
 	int state;
-	int DeadTime;
+	int deadTime;
 	int oldDeadTime;
 	bool deadTimeFlag;
 	float deadTimeTolerance;
@@ -35,6 +35,7 @@ private:
 	float measuredOutputOld;
 	float* signalInput;
 	float* signalOutput;
+	float* deadTimeVector;
 	float estimatedValue;
 	float* resultArray;
 	vector<float>* parametersVector;

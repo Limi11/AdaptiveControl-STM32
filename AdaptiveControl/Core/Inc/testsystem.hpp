@@ -32,6 +32,8 @@ private:
 	int deadTimeTimer;
 	// return array
 	float *output;
+	//
+	float *deadtimeVector;
 
 
 

@@ -12,16 +12,16 @@
 #include <stdio.h>
 
 
-deadbeat_controller::deadbeat_controller(int firstcontroloutput, int order)
-:firstControlOutput(firstcontroloutput),deadtime(0),order(order),pArray(new float[order+1]), qArray(new float[order+1]),
- aArray(new float[order]), bArray(new float[order]),  inputArray(new float[order+20]), outputArray(new float[order+1]), firstRound(0)
+deadbeat_controller::deadbeat_controller(int firstcontroloutput, int order,  int deadtimeMaxTimesteps)
+:firstControlOutput(firstcontroloutput),deadTime(0),deadtimeVector(new float[deadtimeMaxTimesteps]),order(order),pArray(new float[order+1]), qArray(new float[order+1]),
+ aArray(new float[order]), bArray(new float[order]), inputArray(new float[order+20]), outputArray(new float[order+1]), firstRound(0)
 {
 	for(int i=0; i<order+1; i++)
 	{
 		outputArray[i] = 0;
 	}
 
-	for(int i=0; i<order+1+deadtime; i++)
+	for(int i=0; i<order+1; i++)
 	{
 		inputArray[i] = 0;
 	}
@@ -35,22 +35,38 @@ deadbeat_controller::~deadbeat_controller()
 	delete bArray;
 	delete inputArray;
 	delete outputArray;
+	delete deadtimeVector;
 }
 
 
 void deadbeat_controller::getInputs(float input)
 {
-
-	for(int i = (order+1+deadtime); i>=1; i--)
+	if(deadTime == 0)
 	{
-		inputArray[i] = inputArray[i-1];
+		for(int i=(order+1); i>=1; i--)
+		{
+			inputArray[i] = inputArray[i-1];
+		}
+		inputArray[0] = input;
 	}
-
-	inputArray[0] = input;
+	else
+	{
+		for(int i=(deadTime-1); i>=1; i--)
+		{
+			deadtimeVector[i] = deadtimeVector[i-1];
+		}
+		deadtimeVector[0] = input;
+		inputArray[0] = deadtimeVector[deadTime];
+		for(int i=(order+1); i>=1; i--)
+		{
+			inputArray[i] = inputArray[i-1];
+		}
+	}
 }
 
 void deadbeat_controller::getNewSystem(float* system, int deadtime)
 {
+	deadTime = deadtime;
 	for(int i=0; i<order; i++)
 		{
 		aArray[i] = -system[i];
@@ -92,7 +108,7 @@ float deadbeat_controller::controll()
 
 	for(int i=0; i<=order+2; i++)
 	{
-	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i+deadtime];
+	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
 	/*
 	printf("qArray[i]: %.2f  \r\n\r\n", qArray[i]);
 	printf("pArray[i]: %.2f  \r\n\r\n", pArray[i]);
