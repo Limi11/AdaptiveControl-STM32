@@ -116,7 +116,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 	// y = Output
 
 	// the first two rounds without newCovarianceMatrix
-	if(error>=errorTolerance && state>0)
+	if(abs(error)>=errorTolerance && state>0)
 	{
 		if(state == 2)
 		{
@@ -129,6 +129,7 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 		// set signalVector k = k+1
 		*signalVector = *signalVectornew;
 		// set new signalVector k+1
+		signalVector->printVector("signalVector");
 		newSignalVector(OutputNew,InputNew);
 		newCorrectionVector();
 		newParametersVector(OutputNew);

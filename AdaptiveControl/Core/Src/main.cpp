@@ -71,7 +71,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-systemidentification *PT2 = new systemidentification(2,99,0,false,0.2,10);
+systemidentification *PT2 = new systemidentification(2,95,0,false,0.2,10);
 testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
 deadbeat_controller *controller = new deadbeat_controller(6,2,10);
@@ -295,55 +295,42 @@ void StartDefaultTask(void *argument)
   float y = 0;
   int initFlag = 0;
   int deadtime = 0;
+  float* system;
+  float *result;
 
   for(;;)
-  	  {
+ {
 
 // system learning phase
 	  if(initFlag < 10)
 	  {
 		  for(int i = 0; i<=50; i++)
 		{
-			 float* system = PT1->testsystem_output(2,1000);
-			 float *result = PT2->calculateSystem(system[0],system[1],0);
+			 system = PT1->testsystem_output(0.5,1000);
+			 result = PT2->calculateSystem(system[0],system[1],0);
 			 deadtime = PT2->newDeadTime();
 			 controller->getNewSystem(result,deadtime);
-
 		}
 		  for(int i = 0; i<=50; i++)
-		  {
-			  float* system = PT1->testsystem_output(1,1000);
-		  	  float *result = PT2->calculateSystem(system[0],system[1],0);
-		  	  controller->getNewSystem(result,deadtime);
-		  }
-		  for(int i = 0; i<=50; i++)
-		  {
-			   float* system = PT1->testsystem_output(-1,1000);
-			   float *result = PT2->calculateSystem(system[0],system[1],0);
-			   controller->getNewSystem(result,deadtime);
-		  }
-		  for(int i = 0; i<=50; i++)
-		  {
-				float* system = PT1->testsystem_output(1,1000);
-				float *result = PT2->calculateSystem(system[0],system[1],0);
-				controller->getNewSystem(result,deadtime);
-		 }
-		  initFlag++;
+		{
+			 system = PT1->testsystem_output(-0.5,1000);
+			 result = PT2->calculateSystem(system[0],system[1],0);
+			 deadtime = PT2->newDeadTime();
+			 controller->getNewSystem(result,deadtime);
+		}
 	  }
-	  else
-	  {
 // test adaptive control
-		float* system = PT1->testsystem_output(u,1000);
-		float *result = PT2->calculateSystem(system[0],system[1],0);
+		system = PT1->testsystem_output(u,1000);
+		result = PT2->calculateSystem(system[0],system[1],0);
 		float controlDelta = w-system[0];
 		controller->getInputs(controlDelta);
 	 	controller->calculateNewController();
 	 	u = controller->controll();
  	 	printf("y: %.2f  \r\n\r\n", y);
  	 	printf("u: %.2f \r\n\r\n", u);
-	  }
-  }
+
   /* USER CODE END 5 */ 
+}
 }
 
 /* IdentificationCallback function */
