@@ -79,15 +79,11 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 
 	if(Startup == 1)
 	{
-		if(deadTimeFlag == true)
+		if(deadTimeFlag == true && state == 0)
 		{
 			calculateDeadtime(OutputNew, InputNew);
 			*signalVector = *signalVectornew;
 			newSignalVector(OutputNew,InputNew);
-		}
-		else
-		{
-			state = 1;
 		}
 	}
 	else
@@ -129,7 +125,6 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 		// set signalVector k = k+1
 		*signalVector = *signalVectornew;
 		// set new signalVector k+1
-		signalVector->printVector("signalVector");
 		newSignalVector(OutputNew,InputNew);
 		newCorrectionVector();
 		newParametersVector(OutputNew);
@@ -305,6 +300,7 @@ void systemidentification::newCorrectionVector()
 
 	// ********* calculate new correctionVector *********
 	// formula: help Vector/(help Scalar+1)
+	// https://de.wikipedia.org/wiki/RLS-Algorithmus
 
 	for(int i=0; i<m; i++)
 	{
