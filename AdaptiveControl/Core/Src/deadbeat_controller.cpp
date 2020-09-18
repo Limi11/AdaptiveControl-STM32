@@ -72,10 +72,6 @@ void deadbeat_controller::getNewSystem(float* system, int deadtime)
 		aArray[i] = -system[i];
 		bArray[i] = system[i+order];
 		}
-		printf("aArray[0]: %.2f  \r\n\r\n", aArray[0]);
-		printf("aArray[1]: %.2f  \r\n\r\n", aArray[1]);
-		printf("bArray[0]: %.2f  \r\n\r\n", bArray[0]);
-		printf("bArray[1]: %.2f  \r\n\r\n", bArray[1]);
 }
 
 void deadbeat_controller::calculateNewController()
@@ -109,12 +105,6 @@ float deadbeat_controller::controll()
 	for(int i=0; i<=order+2; i++)
 	{
 	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
-	/*
-	printf("qArray[i]: %.2f  \r\n\r\n", qArray[i]);
-	printf("pArray[i]: %.2f  \r\n\r\n", pArray[i]);
-	printf("outputArray[i]: %.2f  \r\n\r\n", outputArray[i]);
-	printf("inputArray[i]: %.2f  \r\n\r\n", inputArray[i]);
-	*/
 	}
 
 	if(output > firstControlOutput)

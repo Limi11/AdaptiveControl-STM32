@@ -33,7 +33,7 @@ systemidentification::systemidentification(int order, float expoForget, float er
 	//, unitMatrix({1.0,0.0,0.0,0.0},{0.0,1.0,0.0,0.0},{0.0,0.0,1.0,0.0},{0.0,0.0,0.0,1.0};
 	for(int i=0; i<m; i++)
 	{
-		covarianceMatrix->setElement(i,i,100000.0);
+		covarianceMatrix->setElement(i,i,100.0);
 		unitMatrix->setElement(i,i,1.0);
 	}
 	for(int i=0; i<order; i++)
@@ -62,38 +62,11 @@ systemidentification::~systemidentification()
 	delete unitMatrix;
 	delete helpMatrix;
 	delete deadTimeVector;
+	delete sysVerification;
 }
 
-float* systemidentification::calculateSystem(float OutputNew,float InputNew, int Startup)
+float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 {
-
-#ifdef _DEBUG
-	printf("\r\n\r\n\r\n\r\n\r\n********************** Start deadtime Identification **********************\n\r");
-	printf("*************************************************************************\n\r\n");
-#endif
-
-	// internal states
-	// deadtime calculation = 0
-	// first init round = 1
-	// system calculation = 2
-
-	if(Startup == 1)
-	{
-		if(deadTimeFlag == true && state == 0)
-		{
-			calculateDeadtime(OutputNew, InputNew);
-			*signalVector = *signalVectornew;
-			newSignalVector(OutputNew,InputNew);
-		}
-	}
-	else
-	{
-		if(state == 0)
-		{
-			state = 1;
-		}
-	}
-
 
 #ifdef _DEBUG
 	printf("\r\n\r\n\r\n\r\n\r\n********************** Start System Identification **********************\n\r");
@@ -111,23 +84,15 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew, int
 	// O = Parameter Vector
 	// y = Output
 
+	*signalVector = *signalVectornew;
+	newSignalVector(OutputNew,InputNew);
+
 	// the first two rounds without newCovarianceMatrix
-	if(abs(error)>=errorTolerance && state>0)
+	if(abs(error)>=errorTolerance)
 	{
-		if(state == 2)
-		{
-		newCovarianceMatrix();
-		}
-		else
-		{
-			state++;
-		}
-		// set signalVector k = k+1
-		*signalVector = *signalVectornew;
-		// set new signalVector k+1
-		newSignalVector(OutputNew,InputNew);
 		newCorrectionVector();
 		newParametersVector(OutputNew);
+		newCovarianceMatrix();
 	}
 
 	// we need the new calculation error to decide if we want to start or stop identification
@@ -228,7 +193,7 @@ void systemidentification::newCovarianceMatrix()
 	helpMatrix->printMatrix("Help Matrix:");
 #endif
 
-//	*helpMatrix = *unitMatrix-*helpMatrix;
+	*helpMatrix = *unitMatrix-*helpMatrix;
 
 
 #ifdef _DEBUG
@@ -239,9 +204,11 @@ void systemidentification::newCovarianceMatrix()
 	covarianceMatrix->printMatrix("Covariance Matrix:");
 #endif
 
-//	*covarianceMatrix = (*helpMatrix) * (*covarianceMatrix);
-	(*helpMatrix) = (*helpMatrix) * (*covarianceMatrix);
-	*covarianceMatrix = (*covarianceMatrix)-(*helpMatrix);
+	*covarianceMatrix = (*helpMatrix) * (*covarianceMatrix);
+
+	// same calculation in another way
+	//(*helpMatrix) = (*helpMatrix) * (*covarianceMatrix);
+	//*covarianceMatrix = (*covarianceMatrix)-(*helpMatrix);
 
 	*covarianceMatrix = *covarianceMatrix * (1/expoForget);
 
@@ -323,30 +290,46 @@ void systemidentification::newCorrectionVector()
 
 void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 {
-	float OutputOld = signalOutput[1];
 
-	// deadtime is only calculated on a new system jump from zero
-	if(OutputNew <= OutputOld+deadTimeTolerance && OutputNew >= OutputOld-deadTimeTolerance)
+#ifdef _DEBUG
+	printf("\r\n\r\n\r\n\r\n\r\n********************** Start deadtime Identification **********************\n\r");
+	printf("*************************************************************************\n\r\n");
+#endif
+
+		for(int i=(order-1); i>0; i--)
 		{
-			// reset on new deadtime calculation
-			// has to be defined
-			// if there is a input we count the time steps until the system reacts
+			signalInput[i] = signalInput[i-1];
+		}
+
+		for(int i=(order-1); i>0; i--)
+		{
+			signalOutput[i] = signalOutput[i-1];
+		}
+
+		signalInput[0] = InputNew;
+		signalOutput[0] = OutputNew;
+
+
 			if(InputNew != 0)
 			{
-				deadTime++;
+				state = 1;
 			}
+			if(state == 1)
+			{
+				if(OutputNew < deadTimeTolerance)
+				{
+					deadTime++;
+				}
+			}
+			else
+			{
 				state = 0;
-		}
-	else
-		{
+			}
 
-			if(state == 0)
-			 {
-				 state = 1;
-			 }
-		}
-			oldDeadTime = deadTime;
+#ifdef _DEBUG
 			printf("DeadTime: %d  \r\n\r\n", oldDeadTime);
+#endif
+
 }
 
 void systemidentification::newParametersVector(float OutputNew)

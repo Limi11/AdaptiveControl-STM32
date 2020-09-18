@@ -64,7 +64,7 @@ public:
 	void calculateDeadtime(float OutputNew,float InputNew);
 	int newDeadTime();
 	float abs(float x);
-	float* calculateSystem(float OutputNew,float InputNew, int Startup);
+	float* calculateSystem(float OutputNew,float InputNew);
 	void newParametersVector(float OutputNew);
 	float* resultParametersVector();
 };

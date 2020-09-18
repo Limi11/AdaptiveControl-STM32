@@ -72,7 +72,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 /* USER CODE BEGIN PV */
 
 systemidentification *PT2 = new systemidentification(2,1.0,0,true,0.2,10);
-testsystem *PT1 = new testsystem(0);
+testsystem *PT1 = new testsystem(4);
 testsystem *PT12 = new testsystem(0);
 deadbeat_controller *controller = new deadbeat_controller(6,2,10);
 
@@ -302,28 +302,36 @@ void StartDefaultTask(void *argument)
  {
 
 // system learning phase
-	  if(initFlag < 10)
+	  if(initFlag < 4)
 	  {
-		  for(int i = 0; i<=50; i++)
-		{
-			 system = PT1->testsystem_output(0.5,1000);
-			 result = PT2->calculateSystem(system[0],system[1],1);
+		  for(int i = 0; i<=6; i++)
+		  {
+			  system = PT1->testsystem_output(1,1000);
+			  PT2->calculateDeadtime(system[0],system[1]);
+			  deadtime = PT2->newDeadTime();
+		  		  }
+		  for(int i = 0; i<=100; i++)
+		  {
+			 system = PT1->testsystem_output(1,1000);
+			 result = PT2->calculateSystem(system[0],system[1]);
+			 controller->getNewSystem(result,deadtime);
+			 controller->calculateNewController();
+		  }
+		  for(int i = 0; i<=100; i++)
+		  {
+			 system = PT1->testsystem_output(0,1000);
+			 result = PT2->calculateSystem(system[0],system[1]);
 			 deadtime = PT2->newDeadTime();
 			 controller->getNewSystem(result,deadtime);
-		}
-		  for(int i = 0; i<=50; i++)
-		{
-					 system = PT1->testsystem_output(-0.5,1000);
-					 result = PT2->calculateSystem(system[0],system[1],1);
-					 deadtime = PT2->newDeadTime();
-					 controller->getNewSystem(result,deadtime);
-		}
-	  }
+			 controller->calculateNewController();
+		  }
+		  initFlag++;
+	   }
 	  else
 	  {
 // test adaptive control
 		system = PT1->testsystem_output(u,1000);
-		result = PT2->calculateSystem(system[0],system[1],1);
+		result = PT2->calculateSystem(system[0],system[1]);
 		float controlDelta = w-system[0];
 		controller->getInputs(controlDelta);
 		controller->getNewSystem(result,deadtime);
