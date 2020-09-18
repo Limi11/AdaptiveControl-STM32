@@ -72,7 +72,7 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 /* USER CODE BEGIN PV */
 
 systemidentification *PT2 = new systemidentification(2,1.0,0,true,0.2,10);
-testsystem *PT1 = new testsystem(4);
+testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
 deadbeat_controller *controller = new deadbeat_controller(6,2,10);
 
@@ -313,12 +313,11 @@ void StartDefaultTask(void *argument)
 		}
 		  for(int i = 0; i<=50; i++)
 		{
-			 system = PT1->testsystem_output(1.0,1000);
-			 result = PT2->calculateSystem(system[0],system[1],1);
-			 deadtime = PT2->newDeadTime();
-			 controller->getNewSystem(result,deadtime);
+					 system = PT1->testsystem_output(-0.5,1000);
+					 result = PT2->calculateSystem(system[0],system[1],1);
+					 deadtime = PT2->newDeadTime();
+					 controller->getNewSystem(result,deadtime);
 		}
-		  initFlag++;
 	  }
 	  else
 	  {

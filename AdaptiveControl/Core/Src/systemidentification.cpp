@@ -228,7 +228,8 @@ void systemidentification::newCovarianceMatrix()
 	helpMatrix->printMatrix("Help Matrix:");
 #endif
 
-	*helpMatrix = *unitMatrix-*helpMatrix;
+//	*helpMatrix = *unitMatrix-*helpMatrix;
+
 
 #ifdef _DEBUG
 	helpMatrix->printMatrix("Result Help Matrix:");
@@ -238,7 +239,10 @@ void systemidentification::newCovarianceMatrix()
 	covarianceMatrix->printMatrix("Covariance Matrix:");
 #endif
 
-	*covarianceMatrix = (*helpMatrix) * (*covarianceMatrix);
+//	*covarianceMatrix = (*helpMatrix) * (*covarianceMatrix);
+	(*helpMatrix) = (*helpMatrix) * (*covarianceMatrix);
+	*covarianceMatrix = (*covarianceMatrix)-(*helpMatrix);
+
 	*covarianceMatrix = *covarianceMatrix * (1/expoForget);
 
 #ifdef _DEBUG
@@ -325,10 +329,7 @@ void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 	if(OutputNew <= OutputOld+deadTimeTolerance && OutputNew >= OutputOld-deadTimeTolerance)
 		{
 			// reset on new deadtime calculation
-			if(state != 0)
-			{
-				deadTime = 0;
-			}
+			// has to be defined
 			// if there is a input we count the time steps until the system reacts
 			if(InputNew != 0)
 			{

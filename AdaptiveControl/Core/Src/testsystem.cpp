@@ -11,7 +11,12 @@
 
 testsystem::testsystem(int deadtime)
 	:y(0.0),ylast(0.0),u(0.0),deltaT(5),T(360),Kpt1(200), flag(0), output(new float[2]), deadTime(deadtime), deadtimeVector(new float[deadtime])
-	{};
+	{
+	for(int i = 0; i<deadTime; i++)
+	{
+		deadtimeVector[i] = 0;
+	}
+	};
 
 float* testsystem::testsystem_output(float u, int t)
 {
