@@ -49,29 +49,33 @@ void deadbeat_controller::getInputs(float input)
 		}
 		inputArray[0] = input;
 	}
-	else
-	{
-		for(int i=(deadTime-1); i>=1; i--)
-		{
-			deadtimeVector[i] = deadtimeVector[i-1];
-		}
-		deadtimeVector[0] = input;
-		inputArray[0] = deadtimeVector[deadTime];
-		for(int i=(order+1); i>=1; i--)
-		{
-			inputArray[i] = inputArray[i-1];
-		}
-	}
 }
 
 void deadbeat_controller::getNewSystem(float* system, int deadtime)
 {
 	deadTime = deadtime;
-	for(int i=0; i<order; i++)
+	if(deadTime == 0)
+	{
+		for(int i=0; i<order; i++)
 		{
-		aArray[i] = -system[i];
-		bArray[i] = system[i+order];
+			aArray[i] = -system[i];
+			bArray[i] = system[i+order];
 		}
+	}
+	else
+	{
+
+			for(int i=(deadTime-1); i>=1; i--)
+			{
+				deadtimeVector[i] = deadtimeVector[i-1];
+			}
+			deadtimeVector[0] = input;
+			inputArray[0] = deadtimeVector[deadTime];
+			for(int i=(order+1); i>=1; i--)
+			{
+				inputArray[i] = inputArray[i-1];
+			}
+	}
 }
 
 void deadbeat_controller::calculateNewController()

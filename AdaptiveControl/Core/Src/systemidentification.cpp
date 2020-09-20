@@ -96,14 +96,8 @@ float* systemidentification::calculateSystem(float OutputNew,float InputNew)
 	}
 
 	// we need the new calculation error to decide if we want to start or stop identification
-	if(deadTime == 0)
-	{
-		getError(OutputNew);
-	}
-	else
-	{
-		getError(deadTimeVector[deadTime]);
-	}
+
+	getError(OutputNew);
 
 	return resultParametersVector();
 }
@@ -144,20 +138,27 @@ void systemidentification::newSignalVector(float OutputNew,float InputNew)
 
 		if(deadTime != 0)
 		{
+			printf("deadtimeVector:");
 			for(int i=deadTime-1; i>0; i--)
 			{
 				deadTimeVector[i]=deadTimeVector[i-1];
 			}
-			deadTimeVector[0]=OutputNew;
-			signalVectornew->setElement(0,-deadTimeVector[deadTime-1]);
+			deadTimeVector[0]=InputNew;
+			signalVectornew->setElement(order,deadTimeVector[deadTime-1]);
+			for(int i=0; i<deadTime; i++)
+			{
+				printf(", %2f", deadTimeVector[i]);
+			}
+			printf("\r\n\r\n");
+			signalVectornew->printVector("signalVector");
 		}
 		else
 		{
 			// we need negative y values! therefore -OutputNew ! see source of algorithm RLS
-			signalVectornew->setElement(0,-OutputNew);
+			signalVectornew->setElement(order,InputNew);
 		}
 
-		signalVectornew->setElement(order,InputNew);
+	signalVectornew->setElement(0,-OutputNew);
 
 
 
@@ -314,12 +315,9 @@ void systemidentification::calculateDeadtime(float OutputNew,float InputNew)
 			{
 				state = 1;
 			}
-			if(state == 1)
+			if(OutputNew < deadTimeTolerance && state == 1)
 			{
-				if(OutputNew < deadTimeTolerance)
-				{
 					deadTime++;
-				}
 			}
 			else
 			{

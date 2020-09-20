@@ -27,12 +27,12 @@ float* testsystem::testsystem_output(float u, int t)
 
 		if(deadTime != 0)
 		{
-			for(int i=(deadTime-1); i>0; i--)
+			for(int i=(deadTime); i>0; i--)
 			{
 				deadtimeVector[i] = deadtimeVector[i-1];
 			}
 			deadtimeVector[0] = y;
-			output[0] = deadtimeVector[deadTime-1];
+			output[0] = deadtimeVector[deadTime];
 			output[1] = u;
 		}
 		else

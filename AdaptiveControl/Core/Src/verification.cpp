@@ -59,7 +59,7 @@ float verification::verification_output(float x,const float* ab, int deadtime)
 	}
 
 
-	if(deadtime == 0)
+/*	if(deadtime == 0)
 	{
 		yVec[0] = y;
 		uVec[0] = u;
@@ -73,7 +73,10 @@ float verification::verification_output(float x,const float* ab, int deadtime)
 		deadTimeVector[0] = y;
 		yVec[0] = deadTimeVector[deadtime-1];
 		uVec[0] = u;
-	}
+	}*/
+
+	yVec[0] = y;
+	uVec[0] = u;
 
 	return y;
 };
