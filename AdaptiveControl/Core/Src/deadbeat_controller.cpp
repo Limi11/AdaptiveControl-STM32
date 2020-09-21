@@ -14,7 +14,7 @@
 
 deadbeat_controller::deadbeat_controller(int firstcontroloutput, int order,  int deadtimeMaxTimesteps)
 :firstControlOutput(firstcontroloutput),deadTime(0),deadtimeVector(new float[deadtimeMaxTimesteps]),order(order),pArray(new float[order+1]), qArray(new float[order+1]),
- aArray(new float[order]), bArray(new float[order]), inputArray(new float[order+20]), outputArray(new float[order+1]), firstRound(0)
+ aArray(new float[order]), bArray(new float[order]), inputArray(new float[order+1]), outputArray(new float[order+1]), firstRound(0)
 {
 	for(int i=0; i<order+1; i++)
 	{
@@ -86,7 +86,8 @@ float deadbeat_controller::controll()
 {
 	float output = 0;
 
-	for(int i=0; i<=order+2; i++)
+	// order + 1 or 2 ?? why 2 ??
+	for(int i=0; i<=order+1; i++)
 	{
 	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
 	}
@@ -119,6 +120,7 @@ float deadbeat_controller::controll()
 		}
 		deadtimeVector[0] = output;
 		outputArray[0] = deadtimeVector[deadTime];
+
 		for(int i=(order+1); i>=1; i--)
 		{
 			outputArray[i] = outputArray[i-1];
