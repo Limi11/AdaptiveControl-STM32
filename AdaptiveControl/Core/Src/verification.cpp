@@ -32,7 +32,7 @@ verification::~verification()
 	delete uVec;
 };
 
-float verification::verification_output(float x,const float* ab, int deadtime)
+float verification::verification_output(float x,const float* ab)
 {
 	u = x;
 	y = 0;
@@ -58,22 +58,6 @@ float verification::verification_output(float x,const float* ab, int deadtime)
 		uVec[i] = uVec[i-1];
 	}
 
-
-/*	if(deadtime == 0)
-	{
-		yVec[0] = y;
-		uVec[0] = u;
-	}
-	else
-	{
-		for(int i=(deadtime-1); i>0; i--)
-		{
-			deadTimeVector[i] = deadTimeVector[i-1];
-		}
-		deadTimeVector[0] = y;
-		yVec[0] = deadTimeVector[deadtime-1];
-		uVec[0] = u;
-	}*/
 
 	yVec[0] = y;
 	uVec[0] = u;

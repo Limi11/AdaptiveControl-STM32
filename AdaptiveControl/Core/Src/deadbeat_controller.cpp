@@ -41,41 +41,21 @@ deadbeat_controller::~deadbeat_controller()
 
 void deadbeat_controller::getInputs(float input)
 {
-	if(deadTime == 0)
-	{
 		for(int i=(order+1); i>=1; i--)
 		{
 			inputArray[i] = inputArray[i-1];
 		}
 		inputArray[0] = input;
-	}
 }
 
 void deadbeat_controller::getNewSystem(float* system, int deadtime)
 {
-	deadTime = deadtime;
-	if(deadTime == 0)
-	{
 		for(int i=0; i<order; i++)
 		{
 			aArray[i] = -system[i];
 			bArray[i] = system[i+order];
 		}
-	}
-	else
-	{
-
-			for(int i=(deadTime-1); i>=1; i--)
-			{
-				deadtimeVector[i] = deadtimeVector[i-1];
-			}
-			deadtimeVector[0] = input;
-			inputArray[0] = deadtimeVector[deadTime];
-			for(int i=(order+1); i>=1; i--)
-			{
-				inputArray[i] = inputArray[i-1];
-			}
-	}
+		deadTime = deadtime;
 }
 
 void deadbeat_controller::calculateNewController()
@@ -111,6 +91,8 @@ float deadbeat_controller::controll()
 	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
 	}
 
+
+
 	if(output > firstControlOutput)
 	{
 		output = firstControlOutput;
@@ -120,12 +102,28 @@ float deadbeat_controller::controll()
 		output = 0;
 	}
 
-	for(int i=(order+1); i>=1 ; i--)
-	{
-		outputArray[i] = outputArray[i-1];
-	}
 
+	if(deadTime == 0)
+	{
+		for(int i=(order+1); i>=1 ; i--)
+		{
+			outputArray[i] = outputArray[i-1];
+		}
 	outputArray[0] = output;
+	}
+	else
+	{
+		for(int i=(deadTime-1); i>=1; i--)
+		{
+			deadtimeVector[i] = deadtimeVector[i-1];
+		}
+		deadtimeVector[0] = output;
+		outputArray[0] = deadtimeVector[deadTime];
+		for(int i=(order+1); i>=1; i--)
+		{
+			outputArray[i] = outputArray[i-1];
+		}
+	}
 
 	return output;
 }

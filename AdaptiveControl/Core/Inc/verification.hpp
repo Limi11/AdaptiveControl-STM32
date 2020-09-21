@@ -34,7 +34,7 @@ public:
 
 	verification(int order, int deadTimeMaxTimesteps);
 	~verification();
-	float verification_output(float x,const float* ab,int deadtime);
+	float verification_output(float x,const float* ab);
 
 };
 
