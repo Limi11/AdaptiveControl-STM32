@@ -32,9 +32,10 @@ private:
 	float* inputArray;
 	float* outputArray;
 	int firstRound;
+	bool negativeOutput;
 
 public:
-	deadbeat_controller(int firstControlOutput, int order, int deadtimeMaxTimesteps);
+	deadbeat_controller(int firstControlOutput, int order, int deadtimeMaxTimesteps, bool negativeOutput);
 	~deadbeat_controller();
 	void getInputs(float input);
 	void getNewSystem(float* system, int deadtime);

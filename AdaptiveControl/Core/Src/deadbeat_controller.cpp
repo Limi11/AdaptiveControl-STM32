@@ -12,9 +12,9 @@
 #include <stdio.h>
 
 
-deadbeat_controller::deadbeat_controller(int firstcontroloutput, int order,  int deadtimeMaxTimesteps)
+deadbeat_controller::deadbeat_controller(int firstcontroloutput, int order,  int deadtimeMaxTimesteps, bool negativeOutput)
 :firstControlOutput(firstcontroloutput),deadTime(0),deadtimeVector(new float[deadtimeMaxTimesteps]),order(order),pArray(new float[order+1]), qArray(new float[order+1]),
- aArray(new float[order]), bArray(new float[order]), inputArray(new float[order+1]), outputArray(new float[order+1]), firstRound(0)
+ aArray(new float[order]), bArray(new float[order]), inputArray(new float[order+1]), outputArray(new float[order+1]), firstRound(0), negativeOutput(negativeOutput)
 {
 	for(int i=0; i<order+1; i++)
 	{
@@ -84,26 +84,41 @@ void deadbeat_controller::calculateNewController()
 
 float deadbeat_controller::controll()
 {
+	// on a new method call init output to zero
 	float output = 0;
 
-	// order + 1 or 2 ?? why 2 ??
+	// this is the main controller formula, heart of the controller
 	for(int i=0; i<=order+1; i++)
 	{
 	output += - pArray[i] * outputArray[i] + qArray[i] * inputArray[i];
 	}
 
-
+// now we know the output but it shouldn't be higher than the first controll output
+// because otherwise the control value could be unrealistic high for a real physical
+// system
 
 	if(output > firstControlOutput)
 	{
 		output = firstControlOutput;
 	}
-	if(output < 0)
+
+// sometimes there is no negative output possible (temperature control, ...)
+	if(negativeOutput == true)
 	{
-		output = 0;
+		if(output < -firstControlOutput)
+		{
+			output = -firstControlOutput;
+		}
+	}
+	else
+	{
+		if(output < 0)
+		{
+			output = 0;
+		}
 	}
 
-
+// if there is no deadtime we shift all outputs k to k+1 and write the current output in the first field of the outputArray
 	if(deadTime == 0)
 	{
 		for(int i=(order+1); i>=1 ; i--)
@@ -111,6 +126,9 @@ float deadbeat_controller::controll()
 			outputArray[i] = outputArray[i-1];
 		}
 	outputArray[0] = output;
+
+// if there is a deadtime we need to shift the deadtimeVecor at first, then put the current output in the first field of the
+// deadtimeVector and at least put the last field of the deadtimeVector in the first field of the outputArray
 	}
 	else
 	{
@@ -127,6 +145,7 @@ float deadbeat_controller::controll()
 		}
 	}
 
+// now we can return the new output value to control the system
 	return output;
 }
 
