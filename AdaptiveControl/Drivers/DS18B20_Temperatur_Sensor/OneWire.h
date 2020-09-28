@@ -1,8 +1,8 @@
-#ifndef OneWire_h
-#define OneWire_h
+//#ifndef OneWire_h
+//#define OneWire_h
 
-#ifdef __cplusplus
-
+//#ifdef __cplusplus
+/*
 #include <stdint.h>
 
 #if defined(__AVR__)
@@ -12,8 +12,8 @@
 #if ARDUINO >= 100
 #include <Arduino.h>       // for delayMicroseconds, digitalPinToBitMask, etc
 #else
-#include "WProgram.h"      // for delayMicroseconds
-#include "pins_arduino.h"  // for digitalPinToBitMask, etc
+//#include "WProgram.h"      // for delayMicroseconds
+//#include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
 // You can exclude certain features from OneWire.  In theory, this
@@ -52,7 +52,7 @@
 #endif
 
 // Board-specific macros for direct GPIO
-#include "util/OneWire_direct_regtype.h"
+//#include "util/OneWire_direct_regtype.h"
 
 class OneWire
 {
