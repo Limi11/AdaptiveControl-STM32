@@ -19,7 +19,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include <main.hpp>
+#include "main.hpp"
 #include "stm32f4xx_it.h"
 #include "FreeRTOS.h"
 #include "task.h"
