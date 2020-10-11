@@ -19,8 +19,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-
-#include <main.hpp>
+#include "main.hpp"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -51,9 +50,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart2;
 
 /* Definitions for defaultTask */
@@ -146,10 +145,10 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-
   /* USER CODE BEGIN 2 */
   RetargetInit(&huart2);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
+  HAL_TIM_Base_Start(&htim3);
 
 
 #ifdef _DEBUG
@@ -196,16 +195,13 @@ int main(void)
   /* Start scheduler */
   osKernelStart();
 
-  uint8_t temp = 0;
-
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-	 temp = DS18B20__Read ();
-	 printf("y: %.2f  \r\n\r\n", temp);
+
     /* USER CODE BEGIN 3 */
 
   }
@@ -270,11 +266,11 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 50;
+  htim2.Init.Prescaler = 255;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 62499;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
@@ -295,8 +291,8 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 50000;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
@@ -314,7 +310,6 @@ static void MX_TIM2_Init(void)
   * @param None
   * @retval None
   */
-
 static void MX_TIM3_Init(void)
 {
 
@@ -331,9 +326,9 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 15;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 0xFFFF;
+  htim3.Init.Period = 0xffff-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
@@ -399,14 +394,7 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin : PC4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA9 */
   GPIO_InitStruct.Pin = GPIO_PIN_9;
@@ -438,9 +426,34 @@ void StartDefaultTask(void *argument)
   int deadtime = 0;
   float* system;
   float *result;
+  float temp;
+  uint8_t TEMP;
 
   for(;;)
   {
+
+	  uint8_t Presence = DS18B20_Start ();
+	  HAL_Delay (1);
+	  DS18B20_Write (0xCC);  // skip ROM
+	  DS18B20_Write (0x44);  // convert t
+	  HAL_Delay (800);
+
+	  Presence = DS18B20_Start ();
+	  HAL_Delay(1);
+	  DS18B20_Write (0xCC);  // skip ROM
+	  DS18B20_Write (0xBE);  // Read Scratch-pad
+
+	  uint8_t Temp_byte1 = DS18B20_Read();
+	  uint8_t Temp_byte2 = DS18B20_Read();
+
+
+
+
+	  TEMP = (Temp_byte2<<8)|Temp_byte1;
+	  temp = (float)TEMP/16;
+
+	  printf("Temp: %.2f  \r\n\r\n", temp);
+/*
 
 // system learning phase
 	  if(initFlag < 1)
@@ -484,11 +497,10 @@ void StartDefaultTask(void *argument)
  	 	printf("y: %.2f  \r\n\r\n", y);
  	 	printf("u: %.2f \r\n\r\n", u);
 	  }
-
+	*/
   /* USER CODE END 5 */
   }
 }
-
 /* USER CODE BEGIN Header_StartTask02 */
 /**
 * @brief Function implementing the myTask02 thread.
