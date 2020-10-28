@@ -16,7 +16,7 @@
 extern TIM_HandleTypeDef htim3;
 
 // mainly internal functions
-void delay (uint32_t us);
+void delay (uint16_t us);
 void Set_Pin_Output (GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 void Set_Pin_Input (GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 

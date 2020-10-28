@@ -10,7 +10,7 @@
 
 
 #define DS18B20_PORT 		GPIOA
-#define DS18B20_PIN 		9
+#define DS18B20_PIN 		GPIO_PIN_9
 
 
 
@@ -19,15 +19,18 @@ uint8_t DS18B20_Start (void)
 	uint8_t Response = 0;
 	Set_Pin_Output(DS18B20_PORT, DS18B20_PIN);   // set the pin as output
 	HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);  // pull the pin low
-	delay(480);   // delay according to datasheet
+	delay(490);   // delay according to datasheet
 
 	Set_Pin_Input(DS18B20_PORT, DS18B20_PIN);    // set the pin as input
-	delay (80);    // delay according to datasheet
+	delay(80);    // delay according to datasheet
 
-	if (!(HAL_GPIO_ReadPin (DS18B20_PORT, DS18B20_PIN))) Response = 1;    // if the pin is low i.e the presence pulse is detected
+	if (!(HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN)))
+	{
+	Response = 1;    // if the pin is low i.e the presence pulse is detected
+	}
 	else Response = -1;
 
-	delay (400); // 480 us delay totally.
+	delay(400); // 480 us delay totally.
 
 	return Response;
 }
@@ -48,16 +51,15 @@ void DS18B20_Write (uint8_t data)
 			delay(1);  // wait for 1 us
 
 			Set_Pin_Input(DS18B20_PORT, DS18B20_PIN);  // set as input
-			delay (50);  // wait for 60 us
+			delay (60);  // wait for 60 us
 		}
 
 		else  // if the bit is low
 		{
 			// write 0
-
 			Set_Pin_Output(DS18B20_PORT, DS18B20_PIN);
 			HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);  // pull the pin LOW
-			delay(50);  // wait for 60 us
+			delay(60);  // wait for 60 us
 
 			Set_Pin_Input(DS18B20_PORT, DS18B20_PIN);
 		}
@@ -77,16 +79,16 @@ uint8_t DS18B20_Read (void)
 		delay(2);  // wait for 2 us
 
 		Set_Pin_Input(DS18B20_PORT, DS18B20_PIN);
-		if (HAL_GPIO_ReadPin (DS18B20_PORT, DS18B20_PIN))  // if the pin is HIGH
+		if (HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN))  // if the pin is HIGH
 		{
 			value |= 1<<i;  // read = 1
 		}
-		delay (60);  // wait for 60 us
+		delay(10);  // wait for 60 us
 	}
 	return value;
 }
 
-void delay(uint32_t us)
+void delay(uint16_t us)
 {
     __HAL_TIM_SET_COUNTER(&htim3,0);
     while ((__HAL_TIM_GET_COUNTER(&htim3))<us);
@@ -108,7 +110,7 @@ void Set_Pin_Input (GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = GPIO_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
 }
 

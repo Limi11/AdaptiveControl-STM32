@@ -324,7 +324,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 15;
+  htim3.Init.Prescaler = 50-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 0xffff-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -349,6 +349,7 @@ static void MX_TIM3_Init(void)
   /* USER CODE END TIM3_Init 2 */
 
 }
+
 
 /**
   * @brief USART2 Initialization Function
@@ -401,7 +402,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
@@ -427,32 +427,38 @@ void StartDefaultTask(void *argument)
   float* system;
   float *result;
   float temp;
-  uint8_t TEMP;
+  int TEMP;
+  uint8_t Presence;
 
   for(;;)
   {
 
-	  uint8_t Presence = DS18B20_Start ();
-	  HAL_Delay (1);
+	  Presence = DS18B20_Start ();
+	  printf("Presence: %d  \r\n\r\n", Presence);
+	  HAL_Delay(1);
 	  DS18B20_Write (0xCC);  // skip ROM
 	  DS18B20_Write (0x44);  // convert t
-	  HAL_Delay (800);
+	  HAL_Delay(800);
 
 	  Presence = DS18B20_Start ();
+	  printf("Presence: %d  \r\n\r\n", Presence);
 	  HAL_Delay(1);
 	  DS18B20_Write (0xCC);  // skip ROM
 	  DS18B20_Write (0xBE);  // Read Scratch-pad
 
 	  uint8_t Temp_byte1 = DS18B20_Read();
+	  HAL_Delay(1);
 	  uint8_t Temp_byte2 = DS18B20_Read();
 
-
-
+	  printf("Temp1: <%8x>  \r\n\r\n", Temp_byte1);
+	  printf("Temp2: <%8x> \r\n\r\n", Temp_byte2);
 
 	  TEMP = (Temp_byte2<<8)|Temp_byte1;
 	  temp = (float)TEMP/16;
 
 	  printf("Temp: %.2f  \r\n\r\n", temp);
+
+	  HAL_Delay (800);
 /*
 
 // system learning phase
