@@ -19,10 +19,10 @@ uint8_t DS18B20_Start (void)
 	uint8_t Response = 0;
 	Set_Pin_Output(DS18B20_PORT, DS18B20_PIN);   // set the pin as output
 	HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);  // pull the pin low
-	delay(490);   // delay according to datasheet
+	delay(480);   // delay according to datasheet
 
 	Set_Pin_Input(DS18B20_PORT, DS18B20_PIN);    // set the pin as input
-	delay(80);    // delay according to datasheet
+	delay(70);    // delay according to datasheet
 
 	if (!(HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN)))
 	{
@@ -83,7 +83,7 @@ uint8_t DS18B20_Read (void)
 		{
 			value |= 1<<i;  // read = 1
 		}
-		delay(10);  // wait for 60 us
+		delay(60);  // wait for 60 us
 	}
 	return value;
 }

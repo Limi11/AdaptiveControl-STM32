@@ -1,7 +1,7 @@
 #MicroXplorer Configuration settings - do not modify
 FREERTOS.FootprintOK=true
 FREERTOS.IPParameters=Tasks01,Timers01,configTIMER_TASK_STACK_DEPTH,FootprintOK
-FREERTOS.Tasks01=defaultTask,24,1280,StartDefaultTask,Default,NULL,Dynamic,NULL,NULL;myTask02,8,128,StartTask02,Default,NULL,Dynamic,NULL,NULL
+FREERTOS.Tasks01=ControllerTask,24,1280,StartControllerTask,Default,NULL,Dynamic,NULL,NULL;SensorTask,24,1280,StartSensorTask,Default,NULL,Dynamic,NULL,NULL
 FREERTOS.Timers01=IdentificationTimer,IdentificationCallback,osTimerPeriodic,Default,NULL,Dynamic,NULL
 FREERTOS.configTIMER_TASK_STACK_DEPTH=512
 File.Version=6
@@ -129,7 +129,7 @@ SH.S_TIM2_CH3.ConfNb=1
 TIM2.Channel-PWM\ Generation3\ CH3=TIM_CHANNEL_3
 TIM2.IPParameters=Channel-PWM Generation3 CH3,Prescaler,Period
 TIM2.Period=62499
-TIM2.Prescaler=255
+TIM2.Prescaler=999
 TIM3.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE
 TIM3.IPParameters=Prescaler,Period,AutoReloadPreload,TIM_MasterOutputTrigger
 TIM3.Period=0xffff-1

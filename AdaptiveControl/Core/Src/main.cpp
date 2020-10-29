@@ -32,6 +32,7 @@
 #include "debug.h"
 #include "deadbeat_controller.hpp"
 #include "DS18B20.hpp"
+#include "sensorNotifier.hpp"
 
 /* USER CODE END Includes */
 
@@ -55,29 +56,29 @@ TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
 
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-		  .name = "defaultTask",
+/* Definitions for ControllerTask */
+osThreadId_t ControllerTaskHandle;
+const osThreadAttr_t ControllerTask_attributes = {
+		  .name = "ControllerTask",
 		  .attr_bits = osThreadDetached,
 		  .cb_mem = NULL,
 		  .cb_size = 0,
 		  .stack_mem = NULL,
-		  .stack_size = 4*2000,
+		  .stack_size = 1280 * 4,
 		  .priority = (osPriority_t) osPriorityNormal,
 		  .tz_module = 0,
 		  .reserved = 0
 };
 /* Definitions for myTask02 */
-osThreadId_t myTask02Handle;
-const osThreadAttr_t myTask02Handle_attributes = {
-		  .name = "myTask02",
+osThreadId_t SensorTaskHandle;
+const osThreadAttr_t SensorTask_attributes = {
+		  .name = "SensorTask",
 		  .attr_bits = osThreadDetached,
 		  .cb_mem = NULL,
 		  .cb_size = 0,
 		  .stack_mem = NULL,
-		  .stack_size = 4*2000,
-		  .priority = (osPriority_t) osPriorityNormal,
+		  .stack_size = 1280 * 4,
+		  .priority = (osPriority_t) osPriorityHigh,
 		  .tz_module = 0,
 		  .reserved = 0
 };
@@ -91,7 +92,8 @@ const osTimerAttr_t IdentificationTimer_attributes = {
 systemidentification *PT2 = new systemidentification(2,1.0,0,true,0.2,10);
 testsystem *PT1 = new testsystem(0);
 testsystem *PT12 = new testsystem(0);
-deadbeat_controller *controller = new deadbeat_controller(6,2,10,true);
+deadbeat_controller *controller = new deadbeat_controller(100,2,10,false);
+sensorNotifier *sensorValues = new sensorNotifier();
 
 /* USER CODE END PV */
 
@@ -101,8 +103,8 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
+void StartControllerTask(void *argument);
+void StartSensorTask(void *argument);
 void IdentificationCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -111,7 +113,21 @@ void IdentificationCallback(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/* USER CODE BEGIN 4 */
 
+void user_pwm_setvalue(uint16_t value)
+{
+    TIM_OC_InitTypeDef sConfigOC;
+    value = value * 655;
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = value;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+}
+
+/* USER CODE END 4 */
 /* USER CODE END 0 */
 
 /**
@@ -146,6 +162,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+
   RetargetInit(&huart2);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
   HAL_TIM_Base_Start(&htim3);
@@ -183,10 +200,10 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  ControllerTaskHandle = osThreadNew(StartControllerTask, NULL, &ControllerTask_attributes);
 
-  /* creation of myTask02 */
-  myTask02Handle = osThreadNew(StartTask02, NULL, &myTask02Handle_attributes);
+  /* creation of SensorTask */
+  SensorTaskHandle = osThreadNew(StartSensorTask, NULL, &SensorTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -212,6 +229,10 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -226,7 +247,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 50;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -235,16 +262,17 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
 }
+
 
 /**
   * @brief TIM2 Initialization Function
@@ -266,7 +294,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 255;
+  htim2.Init.Prescaler = 999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 62499;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -415,7 +443,7 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+void StartControllerTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
@@ -426,84 +454,65 @@ void StartDefaultTask(void *argument)
   int deadtime = 0;
   float* system;
   float *result;
-  float temp;
-  int TEMP;
-  uint8_t Presence;
+
 
   for(;;)
   {
 
-	  Presence = DS18B20_Start ();
-	  printf("Presence: %d  \r\n\r\n", Presence);
-	  HAL_Delay(1);
-	  DS18B20_Write (0xCC);  // skip ROM
-	  DS18B20_Write (0x44);  // convert t
-	  HAL_Delay(800);
+// start with initial system learning phase
 
-	  Presence = DS18B20_Start ();
-	  printf("Presence: %d  \r\n\r\n", Presence);
-	  HAL_Delay(1);
-	  DS18B20_Write (0xCC);  // skip ROM
-	  DS18B20_Write (0xBE);  // Read Scratch-pad
-
-	  uint8_t Temp_byte1 = DS18B20_Read();
-	  HAL_Delay(1);
-	  uint8_t Temp_byte2 = DS18B20_Read();
-
-	  printf("Temp1: <%8x>  \r\n\r\n", Temp_byte1);
-	  printf("Temp2: <%8x> \r\n\r\n", Temp_byte2);
-
-	  TEMP = (Temp_byte2<<8)|Temp_byte1;
-	  temp = (float)TEMP/16;
-
-	  printf("Temp: %.2f  \r\n\r\n", temp);
-
-	  HAL_Delay (800);
-/*
-
-// system learning phase
 	  if(initFlag < 1)
 	  {
-		  for(int i = 0; i<=6; i++)
+		  // calculate deadtime
+		  /*for(int i = 0; i<=6; i++)
 		  {
-			system = PT1->testsystem_output(1,1000);
+			//system = PT1->testsystem_output(1,1000);
 			PT2->calculateDeadtime(system[0],system[1]);
 			deadtime = PT2->newDeadTime();
-		  }
-		  for(int i = 0; i<=100; i++)
+		  }*/
+
+		  for(int i = 0; i<20; i++)
 		  {
-		 	system = PT1->testsystem_output(0,1000);
+			  y = sensorValues->getTemperature();
+			  u = 10;
+
+			  user_pwm_setvalue(u);
+			  printf("u: %.2f \r\n\r\n", u);
+			  result = PT2->calculateSystem(y,u);
+			  osDelay(1000);
 		  }
-		  for(int i = 0; i<=40; i++)
+
+		  for(int i = 0; i<20; i++)
 		  {
-			  float x = i*0.2;
-			  system = PT1->testsystem_output(x,1000);
-			  result = PT2->calculateSystem(system[0],system[1]);
-			  deadtime = PT2->newDeadTime();
+			  y = sensorValues->getTemperature();
+			  u = 30;
+
+			  user_pwm_setvalue(30);
+			  printf("u: %.2f \r\n\r\n", u);
+			  result = PT2->calculateSystem(y,u);
+			  osDelay(1000);
 		  }
-		  for(int i = 40; i>0; i--)
-		  {
-			 float x = -i*0.1;
-			 system = PT1->testsystem_output(x,1000);
-			 result = PT2->calculateSystem(system[0],system[1]);
-			 deadtime = PT2->newDeadTime();
-		  }
+
 		  initFlag++;
 	   }
+
 	  else
 	  {
 // test adaptive control
-		system = PT1->testsystem_output(u,1000);
-		result = PT2->calculateSystem(system[0],system[1]);
-		float controlDelta = w-system[0];
+		y = sensorValues->getTemperature();
+		u = 10;
+
+		result = PT2->calculateSystem(y,u);
+		float controlDelta = w-y;
 		controller->getInputs(controlDelta);
 		controller->getNewSystem(result,deadtime);
 	 	controller->calculateNewController();
 	 	u = controller->controll();
  	 	printf("y: %.2f  \r\n\r\n", y);
  	 	printf("u: %.2f \r\n\r\n", u);
+
+ 	 	osDelay(1000);
 	  }
-	*/
   /* USER CODE END 5 */
   }
 }
@@ -514,14 +523,41 @@ void StartDefaultTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
+void StartSensorTask(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
+
+	  float temp;
+	  uint16_t TEMP;
+	  uint8_t Presence;
+
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	  for(;;)
+	  {
+		  Presence = DS18B20_Start ();
+		  printf("Presence1: %d \r\n\r\n", Presence);
+		  osDelay(1);
+		  DS18B20_Write (0xCC);  // skip ROM
+		  DS18B20_Write (0x44);  // convert t
+		  osDelay(700);
+
+		  Presence = DS18B20_Start ();
+		  printf("Presence2: %d \r\n\r\n", Presence);
+		  osDelay(1);
+		  DS18B20_Write (0xCC);  // skip ROM
+		  DS18B20_Write (0xBE);  // Read Scratch-pad
+
+		  uint8_t Temp_byte1 = DS18B20_Read();
+		  osDelay(1);
+		  uint8_t Temp_byte2 = DS18B20_Read();
+
+		  TEMP = (Temp_byte2<<8)|Temp_byte1;
+		  temp = (float)TEMP/16;
+
+		  sensorValues->setTemperature(temp);
+
+		  osDelay (3000);
+	  }
   /* USER CODE END StartTask02 */
 }
 
